@@ -252,7 +252,7 @@ void buttonCheck(void)
 	buttonValues[2] = !HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
 	buttonValues[3] = !HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8);
 
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < 2; i++)
 	{
 	  if ((buttonValues[i] != buttonValuesPrev[i]) && (buttonCounters[i] < 40))
 	  {
@@ -297,6 +297,26 @@ void buttonCheck(void)
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
 			}
 			buttonPressed[0] = 0;
+	}
+	if (buttonPressed[1] == 1)
+	{
+
+			neuron->filterPlacement++;
+			neuron->voltage = 0.0f;
+			if (neuron->filterPlacement > 1)
+			{
+				neuron->filterPlacement = 0;
+			}
+			if (neuron->filterPlacement == AfterFeedback)
+			{
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+			}
+			else if (neuron->filterPlacement == InFeedback)
+			{
+				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+			}
+
+			buttonPressed[1] = 0;
 	}
 }
 

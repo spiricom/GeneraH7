@@ -139,14 +139,11 @@ int main(void)
 	if (HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&myADC, NUM_ADC_CHANNELS) != HAL_OK)
 	{
 		Error_Handler();
-		//HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+
 	}
 	audioInit(&hi2c2, &hsai_BlockA1, &hsai_BlockB1, &hrng, ((uint16_t*)&myADC));
 	
 	
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-	//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
 	
 	
   /* USER CODE END 2 */
