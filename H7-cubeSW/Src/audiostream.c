@@ -28,6 +28,9 @@ float sample = 0.0f;
 
 float adcx[8];
 
+uint8_t audioInCV = 0;
+uint8_t audioInCVAlt = 0;
+
 void audioFrame(uint16_t buffer_offset);
 float audioTickL(float audioIn); 
 float audioTickR(float audioIn);
@@ -183,7 +186,7 @@ void audioFrame(uint16_t buffer_offset)
 		}
 		else
 		{
-			//current_sample = (int16_t)(audioTickR((float) (audioInBuffer[buffer_offset + i] * INV_TWO_TO_15)) * TWO_TO_15);
+			current_sample = (int16_t)(audioTickR((float) (audioInBuffer[buffer_offset + i] * INV_TWO_TO_15)) * TWO_TO_15);
 		}
 		audioOutBuffer[buffer_offset + i] = current_sample;
 	}
@@ -191,14 +194,46 @@ void audioFrame(uint16_t buffer_offset)
 
 float currentFreq = 1.0f;
 
-
+float rightInput = 0.0f;
 
 float audioTickL(float audioIn) 
 {
-	    tNeuronSetTimeStep(neuron, tRampTick(ramp[TIMESTEP]));
 
-		tNeuronSetCurrent(neuron, tRampTick(ramp[CURRENT]));
+		if (audioInCVAlt)
+		{
+			neuron->voltage += audioIn;
+		}
+		if (audioInCV)
+	    {
+	    	if (adcx[V3] < .95f)
+	    	{
+	    		tNeuronSetTimeStep(neuron, tRampTick(ramp[TIMESTEP]) + (audioIn * (1.0f - adcx[V3])));
+	    	}
+	    	else
+	    	{
+	    		tNeuronSetTimeStep(neuron, tRampTick(ramp[TIMESTEP]));
+	    	}
+	    }
+	    else
+	    {
+	    	tNeuronSetTimeStep(neuron, tRampTick(ramp[TIMESTEP]));
+	    }
 
+		if (audioInCV)
+	    {
+	    	if (adcx[V3] < .95f)
+	    	{
+	    		tNeuronSetCurrent(neuron, tRampTick(ramp[CURRENT]) + (rightInput * (1.0f - adcx[V3])));
+	    	}
+	    	else
+	    	{
+	    		tNeuronSetCurrent(neuron, tRampTick(ramp[CURRENT]));
+	    	}
+	    }
+		else
+		{
+			tNeuronSetCurrent(neuron, tRampTick(ramp[CURRENT]));
+		}
 		tNeuronSetL(neuron, tRampTick(ramp[SODIUM_INACT]));
 
 		tNeuronSetN(neuron, tRampTick(ramp[SODIUM_ACT]));
@@ -242,6 +277,7 @@ float audioTickL(float audioIn)
 
 float audioTickR(float audioIn) 
 {
+	rightInput = audioIn;
 	return sample;
 }
 
@@ -252,7 +288,7 @@ void buttonCheck(void)
 	buttonValues[2] = !HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7);
 	buttonValues[3] = !HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8);
 
-	for (int i = 0; i < 2; i++)
+	for (int i = 0; i < 4; i++)
 	{
 	  if ((buttonValues[i] != buttonValuesPrev[i]) && (buttonCounters[i] < 40))
 	  {
@@ -317,6 +353,37 @@ void buttonCheck(void)
 			}
 
 			buttonPressed[1] = 0;
+	}
+	if (buttonPressed[2] == 1)
+	{
+		if (audioInCV == 1)
+		{
+			audioInCV = 0;
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
+		}
+		else
+		{
+			audioInCV = 1;
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
+		}
+
+			buttonPressed[2] = 0;
+	}
+
+	if (buttonPressed[3] == 1)
+	{
+		if (audioInCVAlt == 1)
+		{
+			audioInCVAlt = 0;
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+		}
+		else
+		{
+			audioInCVAlt = 1;
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+		}
+
+			buttonPressed[3] = 0;
 	}
 }
 
