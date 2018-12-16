@@ -168,7 +168,7 @@ float   tNeuronTick(tNeuron* const n)
         if (n->P[i] > 1.0f)         n->P[i] = 0.0f;
         else if (n->P[i] < -1.0f)   n->P[i] = 0.0f;
     }
-    // rate[0]= k ; rate[1] = Na ; rate[2] = l
+    // rate[0]= k ; rate[1] = Na ; rate[2] = h
     n->rate[0] = ((n->gK * powf(n->P[0], 4.0f)) * n->invC);
     n->rate[1] = ((n->gN * powf(n->P[1], 3.0f) * n->P[2]) * n->invC);
     

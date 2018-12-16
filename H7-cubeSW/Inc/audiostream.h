@@ -44,74 +44,11 @@ uint32_t buttonPressed[NUM_BUTTONS];
 extern float testFreq;
 extern uint8_t buttonAPressed;
 
-typedef enum ADCInput
-{
-	ADCJoyY = 0,
-	ADCKnob,
-	ADCPedal,
-	ADCBreath,
-	ADCSlide,
-	ADCInputNil,
-	ADCInputCount = ADCInputNil
-} ADCInput;
+extern tRamp* adc[8];
 
-typedef enum FTMode
-{
-	FTFeedback = 0,
-	FTSynthesisOne, 
-	FTModeNil,
-	FTModeCount = FTModeNil
-} FTMode;
 
-typedef enum KnobMode
-{
-	SlideTune = 0,
-	MasterTune = 1, 
-	OctaveTune = 2,
-	DelayTune = 3,
-	KnobModeNil = 4,
-	KnobModeCount = 5
-} KnobMode;
-
-typedef enum HarmonicMode
-{
-	CaraMode = 0,
-	RajeevMode,
-	JennyMode,
-	HarmonicModeNil,
-	HarmonicModeCount = HarmonicModeNil
-} HarmonicMode;
-
-extern HarmonicMode hMode;
-
-extern int octave;
-extern int16_t position;
-extern uint16_t firstPositionValue;
-extern uint16_t knobValue;
-extern float knobValueToUse;
-extern uint16_t slideValue;
-
-extern FTMode ftMode;
-extern KnobMode kMode;
-extern tRamp* adc[ADCInputCount];
-
-extern float intHarmonic;
-extern float floatHarmonic;
-extern float fundamental;
-extern float customFundamental;
-
-extern tCompressor* myCompressor;
-extern tDelayL* myDelay;
-extern tDelayL* feedbackDelay;
-
-extern tSVF* oldFilter;
-extern tSVF* lp;
-extern tButterworth* filter;
-extern tRamp* myRamp;
 extern tCycle* mySine[2];
 
-extern tSawtooth* osc;
-extern tRamp* freqRamp;
 
 
 /* Exported types ------------------------------------------------------------*/

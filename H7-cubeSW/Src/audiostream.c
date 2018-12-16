@@ -26,28 +26,16 @@ uint8_t buttonAPressed = 0;
 
 float sample = 0.0f;
 
-float adcx[8];
-
-uint8_t audioInCV = 0;
-uint8_t audioInCVAlt = 0;
-
 void audioFrame(uint16_t buffer_offset);
 float audioTickL(float audioIn); 
 float audioTickR(float audioIn);
 void buttonCheck(void);
 
-#define NUM_RAMP N_RAMP
+int audioInCV = 0;
+int audioInCVAlt = 0;
 
-tCompressor* compressor;
-
-tRamp* ramp[NUM_RAMP];
-
-tNeuron* neuron;
-
-typedef enum _NeuronParam
-{
-	TIMESTEP=0,CURRENT,SODIUM_INACT,SODIUM_ACT,POTASSIUM,CAPACITANCE,V1,V3,NUMPARAMS
-} NeuronParam;
+tRamp* adc[8];
+tCycle* mySine[2];
 
 HAL_StatusTypeDef transmit_status;
 HAL_StatusTypeDef receive_status;
@@ -69,29 +57,13 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 
 	adcVals = myADCArray;
 
-	neuron = tNeuronInit();
-
-	for (int i = 0; i < NUM_RAMP; i++)
+	for (int i = 0; i < 8; i++)
 	{
-		ramp[i] = tRampInit(12.0f, 1);
+		adc[i] = tRampInit(12.0f, 1);
 	}
 
-	/*
-	compressor = tCompressorInit();
-	compressor->M = 1.0f;
-	compressor->T = 0.0f;
-	compressor->tauAttack = 25.0f;
-	compressor->tauRelease = 250.0f;
-	compressor->R = 12.0f;
-	compressor->W = 6.0f;
-*/
-	compressor = tCompressorInit();
-	compressor->M = 0.0f;
-	compressor->T = -1.0f;
-	compressor->tauAttack = 20.0f;
-	compressor->tauRelease = 250.0f;
-	compressor->R = 3.0f;
-	compressor->W = 6.0f;
+	mySine[0] = tCycleInit();
+	mySine[1] = tCycleInit();
 
 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
@@ -99,11 +71,9 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 	// set up the I2S driver to send audio data to the codec (and retrieve input as well)	
 	transmit_status = HAL_SAI_Transmit_DMA(hsaiOut, (uint8_t *)&audioOutBuffer[0], AUDIO_BUFFER_SIZE);
 	receive_status = HAL_SAI_Receive_DMA(hsaiIn, (uint8_t *)&audioInBuffer[0], AUDIO_BUFFER_SIZE);
-	
 
 }
 
-float tempVal = 0.0f;
 uint16_t frameCounter = 0;
 
 void audioFrame(uint16_t buffer_offset)
@@ -111,72 +81,12 @@ void audioFrame(uint16_t buffer_offset)
 	uint16_t i = 0;
 	int16_t current_sample = 0;
 
-	//tRampSetDest(ramp[TIMESTEP], 1.0f / ((adcVals[8]*INV_TWO_TO_16 * 128.0f) * 2.0f + 1.0f));
-	//tNeuronSetTimeStep(neuron, 1.0f / (adcVals[8]*INV_TWO_TO_16 * 128.0f * 2.0f + 1.0f));
 
-	/*
-	//tNeuronSetTimeStep(neuron, 1.0f / ((float)adcVals[0]*INV_TWO_TO_16 * 128.0f * 2.0f + 1.0f));
-	//tRampSetDest(ramp[TIMESTEP], 1.0f / ((adcx[TIMESTEP] * 128.0f) * 2.0f + 1.0f));
-	tempVal = (adcx[TIMESTEP] * 128.0f * 2.0f + 1.0f) + (adcVals[8]*INV_TWO_TO_16 * 128.0f * 2.0f + 1.0f);
-	if (tempVal < 10.0f)
-	{
-		tempVal = 10.0f;
-	}
-	tRampSetDest(ramp[TIMESTEP], 1.0f / tempVal);
-
-	tempVal = (50.0f + ((adcx[CURRENT] + ((float)adcVals[9] * INV_TWO_TO_16)) * 128.0f) * 1.5f);
-	tRampSetDest(ramp[CURRENT], tempVal);
-	//tNeuronSetCurrent(neuron, 50.0f + (adcx[CURRENT] * 128.0f) * 1.5f);
-
-	tRampSetDest(ramp[SODIUM_INACT], -adcx[SODIUM_INACT] + (-1 * ((float)adcVals[10])));
-	//tNeuronSetL(neuron, -adcx[SODIUM_INACT]);
-	//tRampSetDest(ramp[1], cval*2.0f);
-
-	tRampSetDest(ramp[SODIUM_ACT], 128.0f + ((adcx[SODIUM_ACT] + ((float)adcVals[11] * INV_TWO_TO_16)) * 128.0f)  * 3.0f);
-	//tNeuronSetN(neuron, 128.0f + (adcx[SODIUM_ACT] * 128.0f)  * 3.0f);
-
-	tRampSetDest(ramp[POTASSIUM], adcx[POTASSIUM] * 80.0f - 20.0f);
-	//tNeuronSetK(neuron, adcx[POTASSIUM] * 80.0f - 20.0f);
-
-	tRampSetDest(ramp[CAPACITANCE], adcx[CAPACITANCE] * 2.0f + 0.01f);
-	//tNeuronSetC(neuron, adcx[CAPACITANCE] * 2.0f + 0.01);
-
-	tRampSetDest(ramp[V1], (adcx[V1] * 128.0f)*2.0f - 128.0f);
-	//tNeuronSetV1(neuron, (adcx[V1] * 128.0f)*2.0f - 128.0f);
-
-	tRampSetDest(ramp[V3], (adcx[V3] * 128.0f)*2.0f - 128.0f);
-	//tNeuronSetV3(neuron, (adcx[V3] * 128.0f)*2.0f - 128.0f);
-
-
-	 */
 	frameCounter++;
 	if (frameCounter >= 1)
 	{
 		frameCounter = 0;
 		buttonCheck();
-	}
-
-
-	tempVal = (adcx[TIMESTEP] * 128.0f * 2.0f + 1.0f) + (adcVals[8]*INV_TWO_TO_16 * 128.0f * 2.0f + 1.0f);
-	if (tempVal < 10.0f)
-	{
-		tempVal = 10.0f;
-	}
-	tRampSetDest(ramp[TIMESTEP], 1.0f / tempVal);
-	tempVal = (50.0f + ((adcx[CURRENT] + ((float)adcVals[9] * INV_TWO_TO_16)) * 128.0f) * 1.5f);
-	tRampSetDest(ramp[CURRENT], tempVal);
-	tempVal = (adcx[SODIUM_INACT] + ((float)adcVals[10] * INV_TWO_TO_16));
-	tRampSetDest(ramp[SODIUM_INACT], -1.0f * tempVal);
-	tempVal = adcx[SODIUM_ACT] + ((float)adcVals[11] * INV_TWO_TO_16);
-	tRampSetDest(ramp[SODIUM_ACT], 128.0f + (tempVal * 128.0f)  * 3.0f);
-	tRampSetDest(ramp[POTASSIUM], adcx[POTASSIUM] * 80.0f - 20.0f);
-	tRampSetDest(ramp[CAPACITANCE], adcx[CAPACITANCE] * 2.0f + 0.01f);
-	tRampSetDest(ramp[V1], (adcx[V1] * 128.0f)*2.0f - 128.0f);
-	tRampSetDest(ramp[V3], (adcx[V3] * 128.0f)*2.0f - 128.0f);
-	for (int i = 0; i < NUMPARAMS; i++)
-	{
-		//dropping the resolution of the knobs to allow for stable positions (by making the ADC only 8 bit)
-		adcx[i] = adcVals[i] / 256 * INV_TWO_TO_8;
 	}
 	
 	for (i = 0; i < (HALF_BUFFER_SIZE); i++)
@@ -192,92 +102,22 @@ void audioFrame(uint16_t buffer_offset)
 	}
 }
 
-float currentFreq = 1.0f;
-
-float rightInput = 0.0f;
 
 float audioTickL(float audioIn) 
 {
-
-		if (audioInCVAlt)
-		{
-			neuron->voltage += audioIn;
-		}
-		if (audioInCV)
-	    {
-	    	if (adcx[V3] < .95f)
-	    	{
-	    		tNeuronSetTimeStep(neuron, tRampTick(ramp[TIMESTEP]) + (audioIn * (1.0f - adcx[V3])));
-	    	}
-	    	else
-	    	{
-	    		tNeuronSetTimeStep(neuron, tRampTick(ramp[TIMESTEP]));
-	    	}
-	    }
-	    else
-	    {
-	    	tNeuronSetTimeStep(neuron, tRampTick(ramp[TIMESTEP]));
-	    }
-
-		if (audioInCV)
-	    {
-	    	if (adcx[V3] < .95f)
-	    	{
-	    		tNeuronSetCurrent(neuron, tRampTick(ramp[CURRENT]) + (rightInput * (1.0f - adcx[V3])));
-	    	}
-	    	else
-	    	{
-	    		tNeuronSetCurrent(neuron, tRampTick(ramp[CURRENT]));
-	    	}
-	    }
-		else
-		{
-			tNeuronSetCurrent(neuron, tRampTick(ramp[CURRENT]));
-		}
-		tNeuronSetL(neuron, tRampTick(ramp[SODIUM_INACT]));
-
-		tNeuronSetN(neuron, tRampTick(ramp[SODIUM_ACT]));
-
-		tNeuronSetK(neuron, tRampTick(ramp[POTASSIUM]));
-
-		tNeuronSetC(neuron, tRampTick(ramp[CAPACITANCE]));
-
-		tNeuronSetV1(neuron, tRampTick(ramp[V1]));
-
-		tNeuronSetV3(neuron, tRampTick(ramp[V3]));
-
-/*
-	tNeuronSetCurrent(neuron, 0.5f);
-
-	tNeuronSetL(neuron, 0.5f);
-
-	tNeuronSetN(neuron,0.5f);
-
-	tNeuronSetK(neuron, 0.5f);
-
-	tNeuronSetC(neuron, 0.5f);
-
-	tNeuronSetV1(neuron, 0.5f);
-
-	tNeuronSetV3(neuron, 0.5f);
-*/
-	sample =  tNeuronTick(neuron);
-	if (isnan(sample))
-	{
-		sample = 0.0f;
-	}
-	sample = tCompressorTick(compressor, sample);
-	if (isnan(sample))
-	{
-		sample = 0.0f;
-	}
-	sample *= 0.95f;
+	tRampSetDest(adc[0], (adcVals[0] * INV_TWO_TO_16));
+	float newFreq = OOPS_midiToFrequency(tRampTick(adc[0]) * 127.0f);
+	tCycleSetFreq(mySine[0], newFreq);
+	sample = tCycleTick(mySine[0]);
 	return sample;
 }
 
 float audioTickR(float audioIn) 
 {
-	rightInput = audioIn;
+	tRampSetDest(adc[1], (adcVals[1] * INV_TWO_TO_16));
+	float newFreq = OOPS_midiToFrequency(tRampTick(adc[1]) * 127.0f);
+	tCycleSetFreq(mySine[1], newFreq);
+	sample = tCycleTick(mySine[1]);
 	return sample;
 }
 
@@ -308,80 +148,55 @@ void buttonCheck(void)
 	if (buttonPressed[0] == 1)
 	{
 
-			neuron->mode++;
-			neuron->voltage = 0.0f;
-			if (neuron->mode > 2)
-			{
-				neuron->mode = 0;
-			}
-			if (neuron->mode == 0)
-			{
+
+			/*
+
+			//RGB LED controls
+			//R
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-			}
-			else if (neuron->mode == 1)
-			{
+
+			//G
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_SET);
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_RESET);
-			}
-			else if (neuron->mode == 2)
-			{
+
+			//B
 				HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_8, GPIO_PIN_RESET);
 				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_9, GPIO_PIN_SET);
-			}
+
+
+			*/
 			buttonPressed[0] = 0;
 	}
 	if (buttonPressed[1] == 1)
 	{
 
-			neuron->filterPlacement++;
-			neuron->voltage = 0.0f;
-			if (neuron->filterPlacement > 1)
-			{
-				neuron->filterPlacement = 0;
-			}
-			if (neuron->filterPlacement == AfterFeedback)
-			{
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-			}
-			else if (neuron->filterPlacement == InFeedback)
-			{
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-			}
+			// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+			//or
+			// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 
 			buttonPressed[1] = 0;
 	}
 	if (buttonPressed[2] == 1)
 	{
-		if (audioInCV == 1)
-		{
-			audioInCV = 0;
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
-		}
-		else
-		{
-			audioInCV = 1;
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
-		}
+
+			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
+			//or
+			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
 
 			buttonPressed[2] = 0;
 	}
 
 	if (buttonPressed[3] == 1)
 	{
-		if (audioInCVAlt == 1)
-		{
-			audioInCVAlt = 0;
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-		}
-		else
-		{
-			audioInCVAlt = 1;
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-		}
+
+			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+			//or
+			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+
 
 			buttonPressed[3] = 0;
 	}
