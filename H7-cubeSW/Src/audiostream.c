@@ -12,7 +12,6 @@
 // (otherwise the TX times out because the DMA can't see the data location) -JS
 
 
-
 ALIGN_32BYTES (int16_t audioOutBuffer[AUDIO_BUFFER_SIZE] __ATTR_RAM_D2);
 ALIGN_32BYTES (int16_t audioInBuffer[AUDIO_BUFFER_SIZE] __ATTR_RAM_D2);
 
@@ -31,8 +30,9 @@ float audioTickL(float audioIn);
 float audioTickR(float audioIn);
 void buttonCheck(void);
 
-int audioInCV = 0;
-int audioInCVAlt = 0;
+int mode1 = 0;
+int mode2 = 0;
+int mode3 = 0;
 
 tRamp* adc[8];
 tCycle* mySine[2];
@@ -173,32 +173,47 @@ void buttonCheck(void)
 	}
 	if (buttonPressed[1] == 1)
 	{
-
-			// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
-			//or
-			// HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
-
-			buttonPressed[1] = 0;
+		if (mode1 == 0)
+		{
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+			mode1 = 1;
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+			mode1 = 0;
+		}
+		buttonPressed[1] = 0;
 	}
 	if (buttonPressed[2] == 1)
 	{
 
-			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
-			//or
-			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
-
-			buttonPressed[2] = 0;
+		if (mode2 == 0)
+		{
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
+			mode2 = 1;
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
+			mode2 = 0;
+		}
+		buttonPressed[2] = 0;
 	}
 
 	if (buttonPressed[3] == 1)
 	{
-
-			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
-			//or
-			//HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
-
-
-			buttonPressed[3] = 0;
+		if (mode3 == 0)
+		{
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+			mode3 = 1;
+		}
+		else
+		{
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+			mode3 = 0;
+		}
+		buttonPressed[3] = 0;
 	}
 }
 
