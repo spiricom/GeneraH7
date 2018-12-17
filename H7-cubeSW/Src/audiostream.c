@@ -30,9 +30,9 @@ float audioTickL(float audioIn);
 float audioTickR(float audioIn);
 void buttonCheck(void);
 
-int mode1 = 0;
-int mode2 = 0;
-int mode3 = 0;
+int mode1 = 1;
+int mode2 = 1;
+int mode3 = 1;
 
 tRamp* adc[8];
 tCycle* mySine[2];
@@ -105,20 +105,22 @@ void audioFrame(uint16_t buffer_offset)
 
 float audioTickL(float audioIn) 
 {
-	tRampSetDest(adc[0], (adcVals[0] * INV_TWO_TO_16));
-	float newFreq = OOPS_midiToFrequency(tRampTick(adc[0]) * 127.0f);
+	tRampSetDest(adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
+	tRampSetDest(adc[4], 1.0f - (adcVals[4] * INV_TWO_TO_16));
+	float newFreq = OOPS_midiToFrequency(tRampTick(adc[0]) * 127.0f) + (audioIn * tRampTick(adc[4]) * 1000.0f);
 	tCycleSetFreq(mySine[0], newFreq);
 	sample = tCycleTick(mySine[0]);
-	return sample;
+	return sample * .9f;
 }
 
 float audioTickR(float audioIn) 
 {
-	tRampSetDest(adc[1], (adcVals[1] * INV_TWO_TO_16));
-	float newFreq = OOPS_midiToFrequency(tRampTick(adc[1]) * 127.0f);
+	tRampSetDest(adc[1], 1.0f -  (adcVals[1] * INV_TWO_TO_16));
+	tRampSetDest(adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
+	float newFreq = OOPS_midiToFrequency(tRampTick(adc[1]) * 127.0f) + (audioIn * tRampTick(adc[5]) * 1000.0f);
 	tCycleSetFreq(mySine[1], newFreq);
 	sample = tCycleTick(mySine[1]);
-	return sample;
+	return sample * .9f;
 }
 
 void buttonCheck(void)
