@@ -56,7 +56,7 @@ extern DAC_HandleTypeDef hdac1;
 
 /* USER CODE END Private defines */
 
-void MX_DAC1_Init(uint8_t DACnum);
+void MX_DAC1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
