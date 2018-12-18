@@ -71,6 +71,11 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
+uint16_t redScaled[17] = {0, 6550, 6660, 6750, 6840, 7000, 7080, 7170, 7250, 7350, 7550, 7900, 8200, 8500, 9300, 9900, 11000};
+uint16_t greenScaled[17] = {0, 8, 9, 10, 11, 13, 16, 22, 30, 40, 60, 110, 180, 300, 400, 700, 900};
+uint16_t blueScaled[17] = {0, 8, 9, 10, 11, 14, 17, 22, 25, 30, 40, 50, 70, 90, 150, 250, 300};
+
+
 //the typedef for assigning jack functions
 typedef enum
 {
@@ -171,12 +176,15 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 
-  //and set the PWM values for those LEDs -- this sets the RGB LED to sort of a soft white
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 50);
+  //and set the PWM values for those LEDs
+  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
+
+
+
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0);
-  __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 9000);
 
   //look at the configure_Jack function for notes on how to set the physical jumpers for each setting
   configure_Jack(1, ANALOG_INPUT); //jack 1 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
@@ -210,10 +218,11 @@ int main(void)
   while (1)
   {
 
-	  if (counter > 10000)
+	  //RGB_LED_setColor(255,255,255);
+	  if (counter > 200000)
 	  {
-		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, internalcounter % 8000);
-		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, internalcounter % 8000);
+		  RGB_LED_setColor(internalcounter % 256, internalcounter % 256, internalcounter % 256);
+		  //__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, internalcounter % 8000);
 		 internalcounter++;
 
 		  counter = 0;
@@ -350,9 +359,32 @@ float randomNumber(void) {
 	return num;
 }
 
-void RGB_LED_setColor(uint8_t R, uint8_t G, uint8_t B)
+
+void RGB_LED_setColor(uint8_t Red, uint8_t Green, uint8_t Blue) //inputs between 0-255
 {
-	;
+	float floatyPoint;
+	uint8_t intPart;
+	float fractPart;
+	float endValue;
+
+	floatyPoint = ((float)Red) * 0.0625f;
+	intPart = (uint8_t)floatyPoint;
+	fractPart = floatyPoint - ((float)intPart);
+	endValue = (redScaled[intPart] * (1.0f - fractPart)) + (redScaled[intPart + 1] * (fractPart));
+	__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, (uint16_t) endValue);
+
+	floatyPoint = ((float)Green) * 0.0625f;
+	intPart = (uint8_t)floatyPoint;
+	fractPart = floatyPoint - ((float)intPart);
+	endValue = (greenScaled[intPart] * (1.0f - fractPart)) + (greenScaled[intPart + 1] * (fractPart));
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, (uint16_t) endValue);
+
+	floatyPoint = ((float)Blue) * 0.0625f;
+	intPart = (uint8_t)floatyPoint;
+	fractPart = floatyPoint - ((float)intPart);
+	endValue = (blueScaled[intPart] * (1.0f - fractPart)) + (blueScaled[intPart + 1] * (fractPart));
+	__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, (uint16_t) endValue);
+
 }
 
 void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
