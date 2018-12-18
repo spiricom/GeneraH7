@@ -1,56 +1,47 @@
-
+/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file           : main.c
   * @brief          : Main program body
   ******************************************************************************
-  * This notice applies to any and all portions of this file
+  ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
   * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * Copyright (c) 2018 STMicroelectronics International N.V. 
-  * All rights reserved.
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
-  * Redistribution and use in source and binary forms, with or without 
-  * modification, are permitted, provided that the following conditions are met:
+  * Redistribution and use in source and binary forms, with or without modification,
+  * are permitted provided that the following conditions are met:
+  *   1. Redistributions of source code must retain the above copyright notice,
+  *      this list of conditions and the following disclaimer.
+  *   2. Redistributions in binary form must reproduce the above copyright notice,
+  *      this list of conditions and the following disclaimer in the documentation
+  *      and/or other materials provided with the distribution.
+  *   3. Neither the name of STMicroelectronics nor the names of its contributors
+  *      may be used to endorse or promote products derived from this software
+  *      without specific prior written permission.
   *
-  * 1. Redistribution of source code must retain the above copyright notice, 
-  *    this list of conditions and the following disclaimer.
-  * 2. Redistributions in binary form must reproduce the above copyright notice,
-  *    this list of conditions and the following disclaimer in the documentation
-  *    and/or other materials provided with the distribution.
-  * 3. Neither the name of STMicroelectronics nor the names of other 
-  *    contributors to this software may be used to endorse or promote products 
-  *    derived from this software without specific written permission.
-  * 4. This software, including modifications and/or derivative works of this 
-  *    software, must execute solely and exclusively on microcontroller or
-  *    microprocessor devices manufactured by or for STMicroelectronics.
-  * 5. Redistribution and use of this software other than as permitted under 
-  *    this license is void and will automatically terminate your rights under 
-  *    this license. 
-  *
-  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
-  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
-  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
-  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
-  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
-  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
-  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
-  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
-  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
-  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
+/* USER CODE END Header */
+
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stm32h7xx_hal.h"
 #include "adc.h"
-#include "bdma.h"
+#include "dac.h"
 #include "dma.h"
 #include "i2c.h"
 #include "quadspi.h"
@@ -60,11 +51,27 @@
 #include "tim.h"
 #include "gpio.h"
 
+/* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "audiostream.h"
 #include "leaf.h"
 
 /* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
 
@@ -74,7 +81,6 @@
 uint16_t redScaled[17] = {0, 6550, 6660, 6750, 6840, 7000, 7080, 7170, 7250, 7350, 7550, 7900, 8200, 8500, 9300, 9900, 11000};
 uint16_t greenScaled[17] = {0, 8, 9, 10, 11, 13, 16, 22, 30, 40, 60, 110, 180, 300, 400, 700, 900};
 uint16_t blueScaled[17] = {0, 8, 9, 10, 11, 14, 17, 22, 25, 30, 40, 50, 70, 90, 150, 250, 300};
-
 
 //the typedef for assigning jack functions
 typedef enum
@@ -104,20 +110,19 @@ void Invalid_Configuration(void);
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 void MPU_Conf(void);
 /* USER CODE END PFP */
 
+/* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
 
 /**
   * @brief  The application entry point.
-  *
-  * @retval None
+  * @retval int
   */
 int main(void)
 {
@@ -127,13 +132,13 @@ int main(void)
   SystemInit();
   /* USER CODE END 1 */
 
-  /* Enable I-Cache-------------------------------------------------------------*/
+  /* Enable I-Cache---------------------------------------------------------*/
   SCB_EnableICache();
 
-  /* Enable D-Cache-------------------------------------------------------------*/
+  /* Enable D-Cache---------------------------------------------------------*/
   SCB_EnableDCache();
 
-  /* MCU Configuration----------------------------------------------------------*/
+  /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
@@ -156,16 +161,15 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_BDMA_Init();
   MX_DMA_Init();
-  MX_ADC1_Init();
+  //MX_ADC1_Init();
   MX_I2C2_Init();
   MX_QUADSPI_Init();
   MX_RNG_Init();
   MX_SAI1_Init();
   MX_SPI4_Init();
-  MX_I2C4_Init();
   MX_TIM3_Init();
+  MX_DAC1_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
@@ -180,7 +184,6 @@ int main(void)
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
-
 
 
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
@@ -202,14 +205,24 @@ int main(void)
   //configure_Jack(11, ANALOG_INPUT); //jack 11 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
   //configure_Jack(12, ANALOG_INPUT); //jack 12 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
 
-	if (HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&myADC, NUM_ADC_CHANNELS) != HAL_OK)
+	//if (HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&myADC, NUM_ADC_CHANNELS) != HAL_OK)
 	{
-		Error_Handler();
+		//Error_Handler();
 
 	}
 	audioInit(&hi2c2, &hsai_BlockA1, &hsai_BlockB1, myADC);
 	
+	  if (HAL_DAC_Start(&hdac1, DAC_CHANNEL_1) != HAL_OK)
+	  {
+	    /* Start Error */
+	    Error_Handler();
+	  }
 
+	  if (HAL_DAC_Start(&hdac1, DAC_CHANNEL_2) != HAL_OK)
+	  {
+	    /* Start Error */
+	    Error_Handler();
+	  }
 
   /* USER CODE END 2 */
 
@@ -223,14 +236,28 @@ int main(void)
 	  {
 		  RGB_LED_setColor(internalcounter % 256, internalcounter % 256, internalcounter % 256);
 		  //__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, internalcounter % 8000);
+
+		  if (HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_12B_R, internalcounter % 2048) != HAL_OK)
+		  {
+		    /* Setting value Error */
+		    Error_Handler();
+		  }
+
+		  if (HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_2, DAC_ALIGN_12B_R, internalcounter % 2048) != HAL_OK)
+		  {
+		    /* Setting value Error */
+		    Error_Handler();
+		  }
 		 internalcounter++;
 
 		  counter = 0;
 	  }
 	  counter++;
-	  /* USER CODE END WHILE */
-  }
+    /* USER CODE END WHILE */
 
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
 }
 
 /**
@@ -239,34 +266,31 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct = {0};
 
-  RCC_OscInitTypeDef RCC_OscInitStruct;
-  RCC_ClkInitTypeDef RCC_ClkInitStruct;
-  RCC_PeriphCLKInitTypeDef PeriphClkInitStruct;
-
-    /**Supply configuration update enable 
-    */
+  /**Supply configuration update enable 
+  */
   MODIFY_REG(PWR->CR3, PWR_CR3_SCUEN, 0);
-
-    /**Configure the main internal regulator output voltage 
-    */
+  /**Configure the main internal regulator output voltage 
+  */
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
   while ((PWR->D3CR & (PWR_D3CR_VOSRDY)) != PWR_D3CR_VOSRDY) 
   {
     
   }
-    /**Macro to configure the PLL clock source 
-    */
+  /**Macro to configure the PLL clock source 
+  */
   __HAL_RCC_PLL_PLLSOURCE_CONFIG(RCC_PLLSOURCE_HSE);
-
-    /**Initializes the CPU, AHB and APB busses clocks 
-    */
+  /**Initializes the CPU, AHB and APB busses clocks 
+  */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI
                               |RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_DIV1;
-  RCC_OscInitStruct.HSICalibrationValue = 16;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
@@ -280,11 +304,10 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLFRACN = 0;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
-
-    /**Initializes the CPU, AHB and APB busses clocks 
-    */
+  /**Initializes the CPU, AHB and APB busses clocks 
+  */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2
                               |RCC_CLOCKTYPE_D3PCLK1|RCC_CLOCKTYPE_D1PCLK1;
@@ -298,13 +321,11 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
-
   PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_RNG|RCC_PERIPHCLK_SPI4
                               |RCC_PERIPHCLK_SAI1|RCC_PERIPHCLK_I2C2
-                              |RCC_PERIPHCLK_ADC|RCC_PERIPHCLK_I2C4
-                              |RCC_PERIPHCLK_USB|RCC_PERIPHCLK_QSPI
+                              |RCC_PERIPHCLK_ADC|RCC_PERIPHCLK_QSPI
                               |RCC_PERIPHCLK_CKPER;
   PeriphClkInitStruct.PLL2.PLL2M = 25;
   PeriphClkInitStruct.PLL2.PLL2N = 344;
@@ -314,38 +335,17 @@ void SystemClock_Config(void)
   PeriphClkInitStruct.PLL2.PLL2RGE = RCC_PLL2VCIRANGE_0;
   PeriphClkInitStruct.PLL2.PLL2VCOSEL = RCC_PLL2VCOWIDE;
   PeriphClkInitStruct.PLL2.PLL2FRACN = 0;
-  PeriphClkInitStruct.PLL3.PLL3M = 25;
-  PeriphClkInitStruct.PLL3.PLL3N = 192;
-  PeriphClkInitStruct.PLL3.PLL3P = 4;
-  PeriphClkInitStruct.PLL3.PLL3Q = 4;
-  PeriphClkInitStruct.PLL3.PLL3R = 2;
-  PeriphClkInitStruct.PLL3.PLL3RGE = RCC_PLL3VCIRANGE_0;
-  PeriphClkInitStruct.PLL3.PLL3VCOSEL = RCC_PLL3VCOWIDE;
-  PeriphClkInitStruct.PLL3.PLL3FRACN = 0;
   PeriphClkInitStruct.QspiClockSelection = RCC_QSPICLKSOURCE_D1HCLK;
   PeriphClkInitStruct.CkperClockSelection = RCC_CLKPSOURCE_HSI;
   PeriphClkInitStruct.Sai1ClockSelection = RCC_SAI1CLKSOURCE_PLL2;
   PeriphClkInitStruct.Spi45ClockSelection = RCC_SPI45CLKSOURCE_D2PCLK1;
   PeriphClkInitStruct.RngClockSelection = RCC_RNGCLKSOURCE_HSI48;
   PeriphClkInitStruct.I2c123ClockSelection = RCC_I2C123CLKSOURCE_D2PCLK1;
-  PeriphClkInitStruct.UsbClockSelection = RCC_USBCLKSOURCE_PLL3;
-  PeriphClkInitStruct.I2c4ClockSelection = RCC_I2C4CLKSOURCE_D3PCLK1;
   PeriphClkInitStruct.AdcClockSelection = RCC_ADCCLKSOURCE_CLKP;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
-
-    /**Configure the Systick interrupt time 
-    */
-  HAL_SYSTICK_Config(SystemCoreClock/1000);
-
-    /**Configure the Systick 
-    */
-  HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
-
-  /* SysTick_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
 /* USER CODE BEGIN 4 */
@@ -390,6 +390,8 @@ void RGB_LED_setColor(uint8_t Red, uint8_t Green, uint8_t Blue) //inputs between
 void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
 {
 	 GPIO_InitTypeDef GPIO_InitStruct;
+
+	 DAC_HandleTypeDef hdac1;
 
 	if (jackNumber == 1)
 	{
@@ -482,7 +484,27 @@ void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
 
 		else if (jackMode == ANALOG_OUTPUT) //put jumper A on 1 and jumper B on 1
 		{
-			//keep pin in analog mode (no pull up or down) but initialize it with the DAC - TODO - JS
+			//keep pin in analog mode (no pull up or down) but initialize it with the DAC
+			 DAC_ChannelConfTypeDef sConfig = {0};
+
+			  /**DAC Initialization
+			  */
+			  hdac1.Instance = DAC1;
+			  if (HAL_DAC_Init(&hdac1) != HAL_OK)
+			  {
+			    Error_Handler();
+			  }
+			  /**DAC channel OUT1 config
+			  */
+			  sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
+			  sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+			  sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+			  sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
+			  sConfig.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
+			  if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK)
+			  {
+			    Error_Handler();
+			  }
 		}
 
 		else
@@ -840,11 +862,9 @@ void MPU_Conf(void)
 
 /**
   * @brief  This function is executed in case of error occurrence.
-  * @param  file: The file name as string.
-  * @param  line: The line in file as a number.
   * @retval None
   */
-void _Error_Handler(char *file, int line)
+void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
@@ -863,7 +883,7 @@ void _Error_Handler(char *file, int line)
   * @param  line: assert_param error line source number
   * @retval None
   */
-void assert_failed(uint8_t* file, uint32_t line)
+void assert_failed(uint8_t *file, uint32_t line)
 { 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
@@ -871,13 +891,5 @@ void assert_failed(uint8_t* file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

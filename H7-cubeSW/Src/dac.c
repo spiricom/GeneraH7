@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * File Name          : ADC.h
+  * File Name          : DAC.c
   * Description        : This file provides code for the configuration
-  *                      of the ADC instances.
+  *                      of the DAC instances.
   ******************************************************************************
   ** This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
@@ -36,43 +36,105 @@
   *
   ******************************************************************************
   */
-/* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __adc_H
-#define __adc_H
-#ifdef __cplusplus
- extern "C" {
-#endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "main.h"
+#include "dac.h"
 
-/* USER CODE BEGIN Includes */
+/* USER CODE BEGIN 0 */
 
-/* USER CODE END Includes */
+/* USER CODE END 0 */
 
-extern ADC_HandleTypeDef hadc1;
+DAC_HandleTypeDef hdac1;
 
-/* USER CODE BEGIN Private defines */
+/* DAC1 init function */
+void MX_DAC1_Init(void)
+{
+  DAC_ChannelConfTypeDef sConfig = {0};
 
-/* USER CODE END Private defines */
+  /**DAC Initialization 
+  */
+  hdac1.Instance = DAC1;
+  if (HAL_DAC_Init(&hdac1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /**DAC channel OUT1 config 
+  */
+  sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
+  sConfig.DAC_Trigger = DAC_TRIGGER_NONE;
+  sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+  sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
+  sConfig.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
+  if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /**DAC channel OUT2 config 
+  */
+  sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
+  if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-void MX_ADC1_Init(void);
 
-/* USER CODE BEGIN Prototypes */
 
-/* USER CODE END Prototypes */
 
-#ifdef __cplusplus
 }
-#endif
-#endif /*__ adc_H */
 
-/**
-  * @}
-  */
+void HAL_DAC_MspInit(DAC_HandleTypeDef* dacHandle)
+{
 
-/**
-  * @}
-  */
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(dacHandle->Instance==DAC1)
+  {
+  /* USER CODE BEGIN DAC1_MspInit 0 */
+
+  /* USER CODE END DAC1_MspInit 0 */
+    /* DAC1 clock enable */
+    __HAL_RCC_DAC12_CLK_ENABLE();
+  
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    /**DAC1 GPIO Configuration
+    PA4     ------> DAC1_OUT1
+    PA5     ------> DAC1_OUT2
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN DAC1_MspInit 1 */
+
+  /* USER CODE END DAC1_MspInit 1 */
+  }
+}
+
+void HAL_DAC_MspDeInit(DAC_HandleTypeDef* dacHandle)
+{
+
+  if(dacHandle->Instance==DAC1)
+  {
+  /* USER CODE BEGIN DAC1_MspDeInit 0 */
+
+  /* USER CODE END DAC1_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_DAC12_CLK_DISABLE();
+  
+    /**DAC1 GPIO Configuration    
+    PA4     ------> DAC1_OUT1
+    PA5     ------> DAC1_OUT2 
+    */
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4|GPIO_PIN_5);
+
+  /* USER CODE BEGIN DAC1_MspDeInit 1 */
+
+  /* USER CODE END DAC1_MspDeInit 1 */
+  }
+} 
+
+/* USER CODE BEGIN 1 */
+
+/* USER CODE END 1 */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
