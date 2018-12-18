@@ -71,9 +71,16 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-//register unsigned int apsr __asm("cpacr");
-
-//FPU->CPACR |= (1<<24);
+//the typedef for assigning jack functions
+typedef enum
+{
+	DIGITAL_INPUT = 0,
+	DIGITAL_OUTPUT,
+	ANALOG_INPUT,
+	ANALOG_OUTPUT,
+	AUDIO_INPUT,
+	AUDIO_OUTPUT
+}jackModeType;
 
 //#define SAMPLERATE96K
 
@@ -81,6 +88,12 @@
 uint16_t myADC[NUM_ADC_CHANNELS] __ATTR_RAM_D2;
 int counter = 0;
 int internalcounter = 0;
+
+
+void RGB_LED_setColor(uint8_t R, uint8_t G, uint8_t B);
+void configure_Jack(uint8_t jackNumber, jackModeType jackMode);
+void Invalid_Configuration(void);
+
 
 /* USER CODE END PV */
 
@@ -129,6 +142,10 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+  // this code sets the processor to treat denormal numbers (very tiny floats) as zero to improve performance.
+  uint32_t tempFPURegisterVal = __get_FPSCR();
+  tempFPURegisterVal |= (1<<24); // set the FTZ (flush-to-zero) bit in the FPU control register
+  __set_FPSCR(tempFPURegisterVal);
 
   /* USER CODE END SysInit */
 
@@ -147,47 +164,45 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
+  //set up the timers that control PWM dimming on the LEDs
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_3);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_4);
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
 
-
+  //and set the PWM values for those LEDs -- this sets the RGB LED to sort of a soft white
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 50);
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0);
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 9000);
-  /// when rebuilding from CubeMX, make sure to comment out original call to MX_USB_HOST_Init() so that this delayed version can happen later. That way the LEDs are initialized and the powersupply is stable.
 
-  //LED initialization
-	//HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_2);
-	//HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
-	//HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_1);
+  //look at the configure_Jack function for notes on how to set the physical jumpers for each setting
+  configure_Jack(1, ANALOG_INPUT); //jack 1 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+  configure_Jack(2, ANALOG_INPUT); //jack 2 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+  configure_Jack(3, ANALOG_INPUT); //jack 3 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
+  configure_Jack(4, ANALOG_INPUT); //jack 4 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
+  configure_Jack(5, AUDIO_INPUT); //jack 5 can be DIGITAL_INPUT, or AUDIO_INPUT
+  configure_Jack(6, AUDIO_INPUT); //jack 6 can be DIGITAL_INPUT, or AUDIO_INPUT
+  configure_Jack(7, AUDIO_OUTPUT); //jack 7 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
+  configure_Jack(8, AUDIO_OUTPUT); //jack 8 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
 
-  //HAL_GPIO_WritePin(GPIOD, GPIO_PIN_11, GPIO_PIN_SET); //led amber  This one is still controlled via GPIO (unfortunately the pin it's connected to is not dimmable via PWM). SET is on, RESET if off.
-
-  //These LEDs are now dimmable (not the amber, though). Call these functions with 0 for off and some number between 1-65535 for different brightnesses. Anything above 500 is actually basically way too bright. 100 is good.
-  // include tim.h anywhere you need to call these functions so that the file knows about the htim handlers.
-
-  //__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_2, 0); //bottom green
-  //__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_3, 0); //led4 top red
-  //__HAL_TIM_SET_COMPARE(&htim8, TIM_CHANNEL_1, 0); //top green
-
-
-  // this code sets the processor to treat denormal numbers (very tiny floats) as zero to improve performance.
-  uint32_t tempFPURegisterVal = __get_FPSCR();
-  tempFPURegisterVal |= (1<<24); // set the FTZ (flush-to-zero) bit in the FPU control register
-  __set_FPSCR(tempFPURegisterVal);
+  //comment these in and configure them if you are using a Genera version with 12 knobs and 6 jacks instead of an 8knob/8jack version
+  //configure_Jack(9, DIGITAL_OUTPUT); //jack 9 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 5
+  //configure_Jack(10, DIGITAL_INPUT); //jack 10 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 6
+  //configure_Jack(11, ANALOG_INPUT); //jack 11 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+  //configure_Jack(12, ANALOG_INPUT); //jack 12 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
 
 	if (HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&myADC, NUM_ADC_CHANNELS) != HAL_OK)
 	{
 		Error_Handler();
 
 	}
-	audioInit(&hi2c2, &hsai_BlockA1, &hsai_BlockB1, &hrng, &myADC);
+	audioInit(&hi2c2, &hsai_BlockA1, &hsai_BlockB1, myADC);
 	
+
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -197,12 +212,9 @@ int main(void)
 
 	  if (counter > 10000)
 	  {
-		  //__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
-		  //__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
-		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, internalcounter % 16000);
-		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, internalcounter % 16000);
-		  //__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 2000);
-		 	  internalcounter++;
+		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, internalcounter % 8000);
+		  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, internalcounter % 8000);
+		 internalcounter++;
 
 		  counter = 0;
 	  }
@@ -338,7 +350,373 @@ float randomNumber(void) {
 	return num;
 }
 
+void RGB_LED_setColor(uint8_t R, uint8_t G, uint8_t B)
+{
+	;
+}
 
+void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
+{
+	 GPIO_InitTypeDef GPIO_InitStruct;
+
+	if (jackNumber == 1)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //be sure to set the jumpers on the IO board for"I/O 5" both to input
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_1;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == DIGITAL_OUTPUT) //be sure to set the jumpers on the IO board for"I/O 5" both to output
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_1;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == ANALOG_INPUT)
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 2)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //be sure to set the jumpers on the IO board for"I/O 6" both to input
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_0;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == DIGITAL_OUTPUT) //be sure to set the jumpers on the IO board for"I/O 6" both to output
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_0;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == ANALOG_INPUT)
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 3)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //be sure to set the jumpers on the IO board for"I/O 7" both to input
+			//also put jumper A on 3 and jumper B on 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_5;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == DIGITAL_OUTPUT) //be sure to set the jumpers on the IO board for"I/O 7" both to output
+			//also put jumper A on 3 and jumper B on 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_5;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == ANALOG_INPUT)
+		{
+			//do nothing, already configured
+		}
+
+		else if (jackMode == ANALOG_OUTPUT) //put jumper A on 1 and jumper B on 1
+		{
+			//keep pin in analog mode (no pull up or down) but initialize it with the DAC - TODO - JS
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 4)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //be sure to set the jumpers on the IO board for"I/O 7" both to input
+			//also put jumper C on 3 and jumper D on 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_4;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == DIGITAL_OUTPUT) //be sure to set the jumpers on the IO board for"I/O 7" both to output
+			//also put jumper C on 3 and jumper D on 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_4;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == ANALOG_INPUT)
+		{
+			//do nothing, already configured
+		}
+
+		else if (jackMode == ANALOG_OUTPUT) // put jumper C on 1 and jumper D on 1
+		{
+			//keep pin in analog mode (no pull up or down) but initialize it with the DAC - TODO - JS
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 5)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //set jumper E to 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_12;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == AUDIO_INPUT) //set jumper E to 1
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 6)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //set jumper F to 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_13;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == AUDIO_INPUT) //set jumper F to 1
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 7)
+	{
+
+		if (jackMode == DIGITAL_OUTPUT) //set jumper G to 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_14;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == AUDIO_OUTPUT) //set jumper G to 1
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 8)
+	{
+
+		if (jackMode == DIGITAL_OUTPUT) //set jumper H to 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_15;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == AUDIO_OUTPUT) //set jumper H to 1
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 9)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //set "I/O board 1" to input (both jumpers), and set jumper I to 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_11;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == DIGITAL_OUTPUT) //set "I/O board 1" to output (both jumpers), and set jumper I to 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_11;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == ANALOG_INPUT) //set "I/O board 1" to input (both jumpers), and set jumper I to 1 and jumper K to 1 (takes away input from knob 5)
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 10)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //set "I/O board 2" to input (both jumpers), and set jumper J to 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_12;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == DIGITAL_OUTPUT) //set "I/O board 2" to output (both jumpers), and set jumper J to 3
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_12;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == ANALOG_INPUT) //set "I/O board 2" to input (both jumpers), and set jumper J to 1 and jumper L to 1 (takes away input from knob 6)
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 11)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //set "I/O board 3" to input (both jumpers), and set jumper M to 1
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_12;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == DIGITAL_OUTPUT) //set "I/O board 3" to output (both jumpers), and set jumper M to 1
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_12;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == ANALOG_INPUT) //set "I/O board 3" to input (both jumpers), and set jumper M to 1
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+
+	else if (jackNumber == 12)
+	{
+
+		if (jackMode == DIGITAL_INPUT) //set "I/O board 4" to input (both jumpers), set jumper O to 3, and jumper N to 1
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_12;
+			  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+			  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+			  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == DIGITAL_OUTPUT) //set "I/O board 4" to output (both jumpers), set jumper O to 3, and jumper N to 1
+		{
+			  GPIO_InitStruct.Pin = GPIO_PIN_12;
+			  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+			  GPIO_InitStruct.Pull = GPIO_NOPULL;
+			  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+			  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+		}
+
+		else if (jackMode == ANALOG_INPUT) //set "I/O board 4" to input (both jumpers), set jumper O to 3, and jumper N to 1
+		{
+			//do nothing, already configured
+		}
+
+		else
+		{
+			Invalid_Configuration();
+		}
+	}
+}
+
+void Invalid_Configuration(void)
+{
+	//just an error function so that you can put a breakpoint here while debugging to check for invalid jack configurations
+	;
+}
 
 void MPU_Conf(void)
 {
