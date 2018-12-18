@@ -47,7 +47,7 @@
 DAC_HandleTypeDef hdac1;
 
 /* DAC1 init function */
-void MX_DAC1_Init(void)
+void MX_DAC1_Init(uint8_t DACnum)
 {
   DAC_ChannelConfTypeDef sConfig = {0};
 
@@ -65,16 +65,22 @@ void MX_DAC1_Init(void)
   sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
   sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
   sConfig.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
-  if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK)
+  if (DACnum == 1)
   {
-    Error_Handler();
+	  if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK)
+	  {
+		  Error_Handler();
+	  }
   }
   /**DAC channel OUT2 config 
   */
-  sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
-  if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_2) != HAL_OK)
+  else if (DACnum == 2)
   {
-    Error_Handler();
+	  sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
+	  if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_2) != HAL_OK)
+	  {
+		  Error_Handler();
+	  }
   }
 
 
@@ -99,11 +105,12 @@ void HAL_DAC_MspInit(DAC_HandleTypeDef* dacHandle)
     PA4     ------> DAC1_OUT1
     PA5     ------> DAC1_OUT2
     */
+    /*
     GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
+*/
   /* USER CODE BEGIN DAC1_MspInit 1 */
 
   /* USER CODE END DAC1_MspInit 1 */
