@@ -40,8 +40,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "quadspi.h"
 
-#include "gpio.h"
-
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -63,7 +61,7 @@ void MX_QUADSPI_Init(void)
   hqspi.Init.DualFlash = QSPI_DUALFLASH_DISABLE;
   if (HAL_QSPI_Init(&hqspi) != HAL_OK)
   {
-    _Error_Handler(__FILE__, __LINE__);
+    Error_Handler();
   }
 
 }
@@ -71,7 +69,7 @@ void MX_QUADSPI_Init(void)
 void HAL_QSPI_MspInit(QSPI_HandleTypeDef* qspiHandle)
 {
 
-  GPIO_InitTypeDef GPIO_InitStruct;
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
   if(qspiHandle->Instance==QUADSPI)
   {
   /* USER CODE BEGIN QUADSPI_MspInit 0 */
@@ -80,6 +78,9 @@ void HAL_QSPI_MspInit(QSPI_HandleTypeDef* qspiHandle)
     /* QUADSPI clock enable */
     __HAL_RCC_QSPI_CLK_ENABLE();
   
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+    __HAL_RCC_GPIOC_CLK_ENABLE();
     /**QUADSPI GPIO Configuration    
     PB2     ------> QUADSPI_CLK
     PE7     ------> QUADSPI_BK2_IO0
@@ -149,13 +150,5 @@ void HAL_QSPI_MspDeInit(QSPI_HandleTypeDef* qspiHandle)
 /* USER CODE BEGIN 1 */
 
 /* USER CODE END 1 */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
