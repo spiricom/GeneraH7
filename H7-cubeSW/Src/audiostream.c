@@ -4,6 +4,7 @@
 #include "leaf.h"
 #include "codec.h"
 #include "tim.h"
+#include "ui.h"
 
 //the audio buffers are put in the D2 RAM area because that is a memory location that the DMA has access to.
 int32_t audioOutBuffer[AUDIO_BUFFER_SIZE] __ATTR_RAM_D2;
@@ -20,10 +21,6 @@ HAL_StatusTypeDef receive_status;
 uint16_t* adcVals;
 
 
-int mode1 = 1;
-int mode2 = 1;
-int mode3 = 1;
-int RGB_mode = 3;
 
 #define NUM_BUTTONS 4
 uint8_t buttonValues[NUM_BUTTONS];
@@ -117,14 +114,11 @@ float audioTickL(float audioIn)
 
 float audioTickR(float audioIn)
 {
-	sample = audioIn;
-	/*
 	tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
 	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[1]) * 127.0f) + (audioIn * tRamp_tick(&adc[5]) * 1000.0f);
 	tCycle_setFreq(&mySine[1], newFreq);
 	sample = tCycle_tick(&mySine[1]);
-	*/
 	return sample * .9f;
 }
 
@@ -162,79 +156,67 @@ void buttonCheck(void)
 		}
 		if (RGB_mode == 0)
 		{
-			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 9000); //R   ///the red channel values should be between 8000 and 16000
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0); //G
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0); //B
+			RGB_LED_setColor(255, 0, 0);
 		}
 
 		else if (RGB_mode == 1)
 		{
-			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 00); //R
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300); //G   //green channel values between 100 and 500
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0); //B
+			RGB_LED_setColor(0, 255, 0);
 		}
 
 		else if (RGB_mode == 2)
 		{
-			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 00); //R
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 00); //G
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 200); //B   // blue channel between 0 and 400
+			RGB_LED_setColor(0, 0, 255);
 		}
 
 		else if (RGB_mode == 3)
 		{
-			__HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0); //R
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0); //G
-			__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0); //B
+
 		}
 		buttonPressed[0] = 0;
 	}
 	if (buttonPressed[1] == 1)
 	{
-		//currently the dimming function of the PWM timers overrides the use of the LED pins as digital outputs
-		/*
+
 		if (mode1 == 0)
 		{
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
 			mode1 = 1;
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_RESET);
 			mode1 = 0;
 		}
-		*/
+
 		buttonPressed[1] = 0;
 	}
 	if (buttonPressed[2] == 1)
 	{
-		//currently the dimming function of the PWM timers overrides the use of the LED pins as digital outputs
-		/*
 		if (mode2 == 0)
 		{
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
 			mode2 = 1;
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11, GPIO_PIN_RESET);
 			mode2 = 0;
 		}
-		*/
 		buttonPressed[2] = 0;
 	}
 
 	if (buttonPressed[3] == 1)
 	{
-		//Timer PWM isn't set up on this LED pin, so we can just set it to on/off.
+
 		if (mode3 == 0)
 		{
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
 			mode3 = 1;
 		}
 		else
 		{
-			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_SET);
+			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_12, GPIO_PIN_RESET);
 			mode3 = 0;
 		}
 		buttonPressed[3] = 0;
