@@ -158,20 +158,15 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
 
-  //set up the timers that control PWM dimming on the LEDs
+  //set up the timers that control PWM dimming on RGB LEDs
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
-
 
   //and set the PWM values for those LEDs
   __HAL_TIM_SET_COMPARE(&htim3, TIM_CHANNEL_4, 0);
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 0);
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 0);
-
-
-
-
 
 	if (HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&myADC, NUM_ADC_CHANNELS) != HAL_OK)
 	{
@@ -181,30 +176,31 @@ int main(void)
 	audioInit(&hi2c2, &hsai_BlockA1, &hsai_BlockB1, myADC);
 	
 
-	  //look at the configure_Jack function for notes on how to set the physical jumpers for each setting
-	  configure_Jack(1, ANALOG_INPUT); //jack 1 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
-	  configure_Jack(2, ANALOG_INPUT); //jack 2 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
-	  configure_Jack(3, ANALOG_OUTPUT); //jack 3 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
-	  configure_Jack(4, ANALOG_OUTPUT); //jack 4 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
-	  configure_Jack(5, AUDIO_INPUT); //jack 5 can be DIGITAL_INPUT, or AUDIO_INPUT
-	  configure_Jack(6, AUDIO_INPUT); //jack 6 can be DIGITAL_INPUT, or AUDIO_INPUT
-	  configure_Jack(7, AUDIO_OUTPUT); //jack 7 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
-	  configure_Jack(8, AUDIO_OUTPUT); //jack 8 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
+	//look at the configure_Jack function for notes on how to set the physical jumpers for each setting
+	configure_Jack(1, ANALOG_INPUT); //jack 1 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+	configure_Jack(2, ANALOG_INPUT); //jack 2 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+	configure_Jack(3, ANALOG_OUTPUT); //jack 3 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
+	configure_Jack(4, ANALOG_OUTPUT); //jack 4 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
+	configure_Jack(5, AUDIO_INPUT); //jack 5 can be DIGITAL_INPUT, or AUDIO_INPUT
+	configure_Jack(6, AUDIO_INPUT); //jack 6 can be DIGITAL_INPUT, or AUDIO_INPUT
+	configure_Jack(7, AUDIO_OUTPUT); //jack 7 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
+	configure_Jack(8, AUDIO_OUTPUT); //jack 8 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
 
-	  //comment these in and configure them if you are using a Genera version with 12 knobs and 6 jacks instead of an 8knob/8jack version
-	  //configure_Jack(9, DIGITAL_OUTPUT); //jack 9 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 5
-	  //configure_Jack(10, DIGITAL_INPUT); //jack 10 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 6
-	  //configure_Jack(11, ANALOG_INPUT); //jack 11 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
-	  //configure_Jack(12, ANALOG_INPUT); //jack 12 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+	//comment these in and configure them if you are using a Genera version with 12 knobs and 6 jacks instead of an 8knob/8jack version
+	//configure_Jack(9, DIGITAL_OUTPUT); //jack 9 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 5
+	//configure_Jack(10, DIGITAL_INPUT); //jack 10 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 6
+	//configure_Jack(11, ANALOG_INPUT); //jack 11 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+	//configure_Jack(12, ANALOG_INPUT); //jack 12 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
 
-	  if (DAC1_active == 1)
-	  {
-		  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
-	  }
-	  if (DAC2_active == 1)
-	  {
-		  HAL_DAC_Start(&hdac1, DAC_CHANNEL_2);
-	  }
+	//it seems like this should be able to happen inside the jack configuration code, but it didn't work when I tried it and this worked to set a flag and break it out. ??? -JS
+	if (DAC1_active == 1)
+	{
+	  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
+	}
+	if (DAC2_active == 1)
+	{
+	  HAL_DAC_Start(&hdac1, DAC_CHANNEL_2);
+	}
 
   /* USER CODE END 2 */
 
@@ -214,10 +210,10 @@ int main(void)
   {
 
 	  //RGB_LED_setColor(255,255,255);
+
+	  //some useless code to mess with the LEDs and CV DAC outputs for tutorial purposes
 	  if (counter > 200000)
 	  {
-
-
 		  //a little routine to fade up the RGB leds together
 		  if (RGB_mode == 3)
 		  {
@@ -227,11 +223,11 @@ int main(void)
 		  CV_DAC_Output(1, internalcounter % 2048);
 		  CV_DAC_Output(2, internalcounter % 2048);
 
-		 internalcounter++;
-
+		  internalcounter++;
 		  counter = 0;
 	  }
 	  counter++;
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
