@@ -117,11 +117,14 @@ float audioTickL(float audioIn)
 
 float audioTickR(float audioIn)
 {
+	sample = audioIn;
+	/*
 	tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
 	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[1]) * 127.0f) + (audioIn * tRamp_tick(&adc[5]) * 1000.0f);
 	tCycle_setFreq(&mySine[1], newFreq);
 	sample = tCycle_tick(&mySine[1]);
+	*/
 	return sample * .9f;
 }
 

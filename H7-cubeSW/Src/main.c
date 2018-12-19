@@ -93,7 +93,6 @@ typedef enum
 	AUDIO_OUTPUT
 }jackModeType;
 
-//#define SAMPLERATE96K
 
 #define NUM_ADC_CHANNELS 12
 uint16_t myADC[NUM_ADC_CHANNELS] __ATTR_RAM_D2;
@@ -417,7 +416,7 @@ void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
 			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 		}
 
-		else if (jackMode == ANALOG_INPUT)
+		else if (jackMode == ANALOG_INPUT) //be sure to set the jumpers on the IO board for"I/O 5" both to input
 		{
 			//do nothing, already configured
 		}
@@ -448,7 +447,7 @@ void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
 			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 		}
 
-		else if (jackMode == ANALOG_INPUT)
+		else if (jackMode == ANALOG_INPUT) //be sure to set the jumpers on the IO board for"I/O 6" both to input
 		{
 			//do nothing, already configured
 		}
@@ -481,7 +480,8 @@ void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
 			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 		}
 
-		else if (jackMode == ANALOG_INPUT)
+		else if (jackMode == ANALOG_INPUT) //be sure to set the jumpers on the IO board for"I/O 7" both to input
+			//also put jumper A on 3 and jumper B on 3
 		{
 			//do nothing, already configured
 		}
@@ -506,7 +506,7 @@ void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
 	else if (jackNumber == 4)
 	{
 
-		if (jackMode == DIGITAL_INPUT) //be sure to set the jumpers on the IO board for"I/O 7" both to input
+		if (jackMode == DIGITAL_INPUT) //be sure to set the jumpers on the IO board for"I/O 8" both to input
 			//also put jumper C on 3 and jumper D on 3
 		{
 			  GPIO_InitStruct.Pin = GPIO_PIN_4;
@@ -515,7 +515,7 @@ void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
 			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 		}
 
-		else if (jackMode == DIGITAL_OUTPUT) //be sure to set the jumpers on the IO board for"I/O 7" both to output
+		else if (jackMode == DIGITAL_OUTPUT) //be sure to set the jumpers on the IO board for"I/O 8" both to output
 			//also put jumper C on 3 and jumper D on 3
 		{
 			  GPIO_InitStruct.Pin = GPIO_PIN_4;
@@ -525,7 +525,8 @@ void configure_Jack(uint8_t jackNumber, jackModeType jackMode)
 			  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 		}
 
-		else if (jackMode == ANALOG_INPUT)
+		else if (jackMode == ANALOG_INPUT) //be sure to set the jumpers on the IO board for"I/O 8" both to input
+			//also put jumper C on 3 and jumper D on 3
 		{
 			//do nothing, already configured
 		}

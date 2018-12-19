@@ -47,11 +47,20 @@
 extern "C" {
 #endif
 
+
+
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+
+
+//switch this if you want 96k sample rate instead of 48k
+//for reasons I don't understand, it appears that 96k settings cause more aliasing than 48k settings do. WUT? Maybe the input filters on the codec aren't as good for 96k mode?? -JS
+//#define SAMPLERATE96K
+#define SAMPLERATE48K
+
 
 /* USER CODE END Includes */
 
