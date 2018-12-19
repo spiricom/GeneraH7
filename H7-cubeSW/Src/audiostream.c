@@ -36,6 +36,7 @@ uint16_t frameCounter = 0;
 //audio objects
 tRamp adc[8];
 tCycle mySine[2];
+t808Hihat myHat;
 
 /**********************************************/
 
@@ -60,6 +61,7 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 
 	tCycle_init(&mySine[0]);
 	tCycle_init(&mySine[1]);
+	t808Hihat_init(&myHat);
 	//now to send all the necessary messages to the codec
 	AudioCodec_init(hi2c);
 
@@ -104,21 +106,30 @@ void audioFrame(uint16_t buffer_offset)
 
 float audioTickL(float audioIn)
 {
+	//read the analog inputs and smooth them with ramps
 	tRamp_setDest(&adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[4], 1.0f - (adcVals[4] * INV_TWO_TO_16));
-	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[4]) * 1000.0f);
-	tCycle_setFreq(&mySine[0], newFreq);
-	sample = tCycle_tick(&mySine[0]);
-	return sample * .9f;
+	tRamp_setDest(&adc[2], 1.0f - (adcVals[2] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[3], 1.0f - (adcVals[3] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[6], 1.0f - (adcVals[6] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
+	//OK, now some audio stuff
+	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[4]) * 100.0f) + (audioIn * tRamp_tick(&adc[1]) * 1000.0f); // knob 5 sets initial frequency, jack 5 lets in audio, and knob 2 sets the amount that the audio FMs the hihat pitch
+	t808Hihat_setOscNoiseMix(&myHat, tRamp_tick(&adc[0]));//knob 1 sets noise mix
+	t808Hihat_setDecay(&myHat, tRamp_tick(&adc[2]) * 2000.0f); //knob 3 sets decay time
+	t808Hihat_setHighpassFreq(&myHat, LEAF_midiToFrequency(tRamp_tick(&adc[3]) * 127.0f)); //knob 4 sets hipass freq
+	t808Hihat_setOscFreq(&myHat, newFreq); // assign that frequency
+	sample = t808Hihat_tick(&myHat); // let's hear it
+	return sample;
 }
 
 float audioTickR(float audioIn)
 {
-	tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
-	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[1]) * 127.0f) + (audioIn * tRamp_tick(&adc[5]) * 1000.0f);
-	tCycle_setFreq(&mySine[1], newFreq);
-	sample = tCycle_tick(&mySine[1]);
+	//tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
+	//tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
+	//float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[1]) * 127.0f) + (audioIn * tRamp_tick(&adc[5]) * 1000.0f);
+	//tCycle_setFreq(&mySine[1], newFreq);
+	//sample = tCycle_tick(&mySine[1]);
 	return sample * .9f;
 }
 
@@ -149,6 +160,8 @@ void buttonCheck(void)
 
 	if (buttonPressed[0] == 1)
 	{
+		t808Hihat_on(&myHat, 1.0f);
+
 		RGB_mode++;
 		if (RGB_mode > 3)
 		{
