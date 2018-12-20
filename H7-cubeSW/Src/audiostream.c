@@ -124,7 +124,8 @@ void audioFrame(uint16_t buffer_offset)
 	}
 }
 
-uint8_t drumTriggered = 0;
+uint8_t snareTriggered = 0;
+uint8_t kickTriggered = 0;
 
 float audioTickL(float audioIn)
 {
@@ -134,6 +135,7 @@ float audioTickL(float audioIn)
 	tRamp_setDest(&adc[2], 1.0f - (adcVals[2] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[3], 1.0f - (adcVals[3] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[4], 1.0f - (adcVals[4] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[6], 1.0f - (adcVals[6] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[7], 1.0f - (adcVals[7] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[8], (adcVals[8] * INV_TWO_TO_16));
@@ -142,32 +144,39 @@ float audioTickL(float audioIn)
 	tRamp_setDest(&adc[11], (adcVals[11] * INV_TWO_TO_16));
 
 	float drumGain = LEAF_clip(0.0f, tRamp_tick(&adc[7]) + tRamp_tick(&adc[9]), 2.0f);
-	//if digital input on jack 6, then trigger drum/hihat
-	if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13)) == 1)
+	//if digital input on jack 5, then trigger drum/hihat
+
+	if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12)) == 1)
 	{
-		if (drumTriggered == 0)
+		if (kickTriggered == 0)
 		{
-			if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12)) == 1)
-			{
-				t808Snare_on(&mySnare, drumGain);
-			}
-			else
-			{
-				t808Kick_on(&myKick, drumGain);
-			}
-			drumTriggered = 1;
+			t808Kick_on(&myKick, drumGain);
+			kickTriggered = 1;
 		}
 	}
 	else
 	{
-		drumTriggered = 0;
+		kickTriggered = 0;
+	}
+	//if digital input on jack 6, then trigger drum/hihat
+	if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13)) == 1)
+	{
+		if (snareTriggered == 0)
+		{
+			t808Snare_on(&mySnare, drumGain);
+			snareTriggered = 1;
+		}
+	}
+	else
+	{
+		snareTriggered = 0;
 	}
 
 	//OK, now some audio stuff
 
 
 	//float newFreq = LEAF_clip(0.0f, LEAF_midiToFrequency(tRamp_tick(&adc[4]) * 100.0f) + (tRamp_tick(&adc[10])* 100.0f) + (audioIn * tRamp_tick(&adc[1]) * 1000.0f), 24000.0f); // knob 5 sets initial frequency, jack 5 lets in audio, and knob 2 sets the amount that the audio FMs the hihat pitch
-	t808Snare_setToneNoiseMix(&mySnare, tRamp_tick(&adc[0]));//knob 1 sets noise mix
+
 	//t808Snare_setTone1Decay(&mySnare, (tRamp_tick(&adc[2]) * 1000.0f) + (tRamp_tick(&adc[8]) * 1000.0f)); //knob 3 sets tone1 decay time (added with jack 1 CV input)
 	//t808Snare_setTone2Decay(&mySnare, (tRamp_tick(&adc[3]) * 1000.0f) + (tRamp_tick(&adc[9]) * 1000.0f)); //knob 4 sets tone2 decay time (added with jack 2 CV input)
 	//t808Snare_setNoiseDecay(&mySnare, (tRamp_tick(&adc[4]) * 1000.0f) + (tRamp_tick(&adc[10]) * 1000.0f)); //knob 4 sets tone2 decay time (added with jack 2 CV input)
@@ -175,8 +184,9 @@ float audioTickL(float audioIn)
 	//t808Hihat_setHighpassFreq(&myHat, LEAF_midiToFrequency(tRamp_tick(&adc[3]) * 127.0f)); //knob 4 sets hipass freq
 	//t808Hihat_setOscFreq(&myHat, newFreq); // assign that frequency
 	//float CVGain = LEAF_clip(0.0f, tRamp_tick(&adc[9]) + tRamp_tick(&adc[7]), 1.0f);
-	sample = t808Snare_tick(&mySnare);//                                                 * CVGain; // let's hear it
-	sample += t808Kick_tick(&myKick);
+	t808Kick_setToneDecay(&myKick, (tRamp_tick(&adc[5]) * 1000.0f) + (tRamp_tick(&adc[11]) * 1000.0f));
+	t808Kick_setToneFreq(&myKick, LEAF_midiToFrequency(tRamp_tick(&adc[6]) * 30.0f) + 14.0f);
+	sample = t808Kick_tick(&myKick);
 	LEAF_shaper(sample, 1.6f);
 	//sample = tNoise_tick(&myNoise);
 	return sample;
@@ -184,12 +194,16 @@ float audioTickL(float audioIn)
 
 float audioTickR(float audioIn)
 {
-	//tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
-	//tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
-	//float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[1]) * 127.0f) + (audioIn * tRamp_tick(&adc[5]) * 1000.0f);
-	//tCycle_setFreq(&mySine[1], newFreq);
-	//sample = tCycle_tick(&mySine[1]);
-	return sample * .9f;
+	float newFreq = LEAF_clip   (0.0f, LEAF_midiToFrequency((tRamp_tick(&adc[1]) * 25.0f) + (tRamp_tick(&adc[8]) * 25.0f)) + 40.0f, 24000.0f);
+	t808Snare_setToneNoiseMix(&mySnare, tRamp_tick(&adc[0]));//knob 1 sets noise mix
+	t808Snare_setTone1Decay(&mySnare, (tRamp_tick(&adc[3]) * 100.0f) + (tRamp_tick(&adc[10]) * 100.0f)); //knob 3 sets tone1 decay time (added with jack 3 CV input)
+	t808Snare_setTone2Decay(&mySnare, (tRamp_tick(&adc[3]) * 150.0f) + (tRamp_tick(&adc[10]) * 150.0f)); //knob 3 sets tone2 decay time (added with jack 3 CV input)
+	t808Snare_setNoiseDecay(&mySnare, (tRamp_tick(&adc[3]) * 100.0f) + (tRamp_tick(&adc[10]) * 100.0f)); //knob 3 sets noise decay time (added with jack 3 CV input)
+	t808Snare_setTone1Freq(&mySnare, newFreq);
+	t808Snare_setTone2Freq(&mySnare, newFreq * 1.5f);
+	sample = t808Snare_tick(&mySnare);//
+	LEAF_shaper(sample, 1.2f);
+	return sample;
 }
 
 
