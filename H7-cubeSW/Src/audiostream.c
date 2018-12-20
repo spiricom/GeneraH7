@@ -194,7 +194,7 @@ float audioTickL(float audioIn)
 
 float audioTickR(float audioIn)
 {
-	float newFreq = LEAF_clip   (0.0f, LEAF_midiToFrequency((tRamp_tick(&adc[1]) * 25.0f) + (tRamp_tick(&adc[8]) * 25.0f)) + 40.0f, 24000.0f);
+	float newFreq = LEAF_clip   (0.0f, LEAF_midiToFrequency((tRamp_tick(&adc[1]) * 15.0f) + (tRamp_tick(&adc[8]) * 15.0f) + 30.0f), 24000.0f);
 	t808Snare_setToneNoiseMix(&mySnare, tRamp_tick(&adc[0]));//knob 1 sets noise mix
 	t808Snare_setTone1Decay(&mySnare, (tRamp_tick(&adc[3]) * 100.0f) + (tRamp_tick(&adc[10]) * 100.0f)); //knob 3 sets tone1 decay time (added with jack 3 CV input)
 	t808Snare_setTone2Decay(&mySnare, (tRamp_tick(&adc[3]) * 150.0f) + (tRamp_tick(&adc[10]) * 150.0f)); //knob 3 sets tone2 decay time (added with jack 3 CV input)
