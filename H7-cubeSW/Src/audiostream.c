@@ -36,7 +36,7 @@ uint16_t frameCounter = 0;
 //audio objects
 tRamp adc[12];
 tCycle mySine[2];
-t808Hihat myHat;
+t808Snare mySnare;
 
 /**********************************************/
 
@@ -78,7 +78,7 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 		//if you want to read different knobs/jacks at different rates or with different smoothing times, you can reinit after this
 	}
 
-	t808Hihat_init(&myHat);
+	t808Snare_init(&mySnare);
 	//now to send all the necessary messages to the codec
 	AudioCodec_init(hi2c);
 
@@ -121,22 +121,22 @@ void audioFrame(uint16_t buffer_offset)
 	}
 }
 
-uint8_t hatTriggered = 0;
+uint8_t snareTriggered = 0;
 
 float audioTickL(float audioIn)
 {
 	//if digital input on jack 6, then trigger drum/hihat
-	if (!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13) == 1)
+	if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13)) == 1)
 	{
-		if (hatTriggered == 0)
+		if (snareTriggered == 0)
 		{
-			t808Hihat_on(&myHat, 1.0f);
-			hatTriggered = 1;
+			t808Snare_on(&mySnare, 10.0f);
+			snareTriggered = 1;
 		}
 	}
 	else
 	{
-		hatTriggered = 0;
+		snareTriggered = 0;
 	}
 
 
@@ -153,16 +153,22 @@ float audioTickL(float audioIn)
 	tRamp_setDest(&adc[9], (adcVals[9] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[10], (adcVals[10] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[11], (adcVals[11] * INV_TWO_TO_16));
+
+
+
 	//OK, now some audio stuff
-	float newFreq = LEAF_clip(0.0f, LEAF_midiToFrequency(tRamp_tick(&adc[4]) * 100.0f) + (tRamp_tick(&adc[10])* 100.0f) + (audioIn * tRamp_tick(&adc[1]) * 1000.0f), 24000.0f); // knob 5 sets initial frequency, jack 5 lets in audio, and knob 2 sets the amount that the audio FMs the hihat pitch
-	t808Hihat_setOscNoiseMix(&myHat, tRamp_tick(&adc[0]));//knob 1 sets noise mix
-	t808Hihat_setDecay(&myHat, (tRamp_tick(&adc[2]) * 2000.0f) + (tRamp_tick(&adc[8]) * 2000.0f)); //knob 3 sets decay time (added with jack 1 CV input)
-	t808Hihat_setStickBandPassFreq( &myHat,    LEAF_clip (0.0f, (LEAF_midiToFrequency(tRamp_tick(&adc[11])* 50.0f + 60.0f)), 24000.0f));
-	t808Hihat_setOscBandpassQ( &myHat, LEAF_clip (0.1f, (tRamp_tick(&adc[11]) * 3.0f), 3.0f));
-	t808Hihat_setHighpassFreq(&myHat, LEAF_midiToFrequency(tRamp_tick(&adc[3]) * 127.0f)); //knob 4 sets hipass freq
-	t808Hihat_setOscFreq(&myHat, newFreq); // assign that frequency
+
+
+	//float newFreq = LEAF_clip(0.0f, LEAF_midiToFrequency(tRamp_tick(&adc[4]) * 100.0f) + (tRamp_tick(&adc[10])* 100.0f) + (audioIn * tRamp_tick(&adc[1]) * 1000.0f), 24000.0f); // knob 5 sets initial frequency, jack 5 lets in audio, and knob 2 sets the amount that the audio FMs the hihat pitch
+	t808Snare_setToneNoiseMix(&mySnare, tRamp_tick(&adc[0]));//knob 1 sets noise mix
+	//t808Snare_setTone1Decay(&mySnare, (tRamp_tick(&adc[2]) * 1000.0f) + (tRamp_tick(&adc[8]) * 1000.0f)); //knob 3 sets tone1 decay time (added with jack 1 CV input)
+	//t808Snare_setTone2Decay(&mySnare, (tRamp_tick(&adc[3]) * 1000.0f) + (tRamp_tick(&adc[9]) * 1000.0f)); //knob 4 sets tone2 decay time (added with jack 2 CV input)
+	//t808Snare_setNoiseDecay(&mySnare, (tRamp_tick(&adc[4]) * 1000.0f) + (tRamp_tick(&adc[10]) * 1000.0f)); //knob 4 sets tone2 decay time (added with jack 2 CV input)
+	//t808Hihat_setOscBandpassQ( &myHat, LEAF_clip (0.1f, (tRamp_tick(&adc[11]) * 3.0f), 3.0f));
+	//t808Hihat_setHighpassFreq(&myHat, LEAF_midiToFrequency(tRamp_tick(&adc[3]) * 127.0f)); //knob 4 sets hipass freq
+	//t808Hihat_setOscFreq(&myHat, newFreq); // assign that frequency
 	float CVGain = LEAF_clip(0.0f, tRamp_tick(&adc[9]) + tRamp_tick(&adc[7]), 1.0f);
-	sample = t808Hihat_tick(&myHat) * CVGain; // let's hear it
+	sample = t808Snare_tick(&mySnare) * CVGain; // let's hear it
 	return sample;
 }
 
@@ -203,7 +209,7 @@ void buttonCheck(void)
 
 	if (buttonPressed[0] == 1)
 	{
-		t808Hihat_on(&myHat, 1.0f);
+		t808Snare_on(&mySnare, 1.0f);
 
 		RGB_mode++;
 		if (RGB_mode > 3)
