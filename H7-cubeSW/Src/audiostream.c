@@ -37,7 +37,8 @@ uint16_t frameCounter = 0;
 tRamp adc[12];
 tCycle mySine[2];
 t808Snare mySnare;
-
+t808Kick myKick;
+tNoise myNoise;
 /**********************************************/
 
 typedef enum BOOL {
@@ -79,6 +80,8 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 	}
 
 	t808Snare_init(&mySnare);
+	t808Kick_init(&myKick);
+	tNoise_init(&myNoise, WhiteNoise);
 	//now to send all the necessary messages to the codec
 	AudioCodec_init(hi2c);
 
@@ -121,26 +124,10 @@ void audioFrame(uint16_t buffer_offset)
 	}
 }
 
-uint8_t snareTriggered = 0;
+uint8_t drumTriggered = 0;
 
 float audioTickL(float audioIn)
 {
-	//if digital input on jack 6, then trigger drum/hihat
-	if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13)) == 1)
-	{
-		if (snareTriggered == 0)
-		{
-			t808Snare_on(&mySnare, 10.0f);
-			snareTriggered = 1;
-		}
-	}
-	else
-	{
-		snareTriggered = 0;
-	}
-
-
-
 	//read the analog inputs and smooth them with ramps
 	tRamp_setDest(&adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
@@ -154,7 +141,27 @@ float audioTickL(float audioIn)
 	tRamp_setDest(&adc[10], (adcVals[10] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[11], (adcVals[11] * INV_TWO_TO_16));
 
-
+	float drumGain = LEAF_clip(0.0f, tRamp_tick(&adc[7]) + tRamp_tick(&adc[9]), 2.0f);
+	//if digital input on jack 6, then trigger drum/hihat
+	if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_13)) == 1)
+	{
+		if (drumTriggered == 0)
+		{
+			if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12)) == 1)
+			{
+				t808Snare_on(&mySnare, drumGain);
+			}
+			else
+			{
+				t808Kick_on(&myKick, drumGain);
+			}
+			drumTriggered = 1;
+		}
+	}
+	else
+	{
+		drumTriggered = 0;
+	}
 
 	//OK, now some audio stuff
 
@@ -167,8 +174,11 @@ float audioTickL(float audioIn)
 	//t808Hihat_setOscBandpassQ( &myHat, LEAF_clip (0.1f, (tRamp_tick(&adc[11]) * 3.0f), 3.0f));
 	//t808Hihat_setHighpassFreq(&myHat, LEAF_midiToFrequency(tRamp_tick(&adc[3]) * 127.0f)); //knob 4 sets hipass freq
 	//t808Hihat_setOscFreq(&myHat, newFreq); // assign that frequency
-	float CVGain = LEAF_clip(0.0f, tRamp_tick(&adc[9]) + tRamp_tick(&adc[7]), 1.0f);
-	sample = t808Snare_tick(&mySnare) * CVGain; // let's hear it
+	//float CVGain = LEAF_clip(0.0f, tRamp_tick(&adc[9]) + tRamp_tick(&adc[7]), 1.0f);
+	sample = t808Snare_tick(&mySnare);//                                                 * CVGain; // let's hear it
+	sample += t808Kick_tick(&myKick);
+	LEAF_shaper(sample, 1.6f);
+	//sample = tNoise_tick(&myNoise);
 	return sample;
 }
 
