@@ -163,8 +163,8 @@ float audioTickL(float audioIn)
 
 	//t808Hihat_setOscBandpassQ( &myHat, LEAF_clip (0.1f, (tRamp_tick(&adc[11]) * 3.0f), 3.0f));
 	t808Hihat_setHighpassFreq(&myHihat[0], LEAF_midiToFrequency(tRamp_tick(&adc[2]) * 127.0f)); //knob 4 sets hipass freq
-	t808Hihat_setStretch(&myHihat, (tRamp_tick(&adc[1]) * 50.f)- 25.0f); // assign that frequency
-	t808Hihat_setFM(&myHihat, tRamp_tick(&adc[5]) * 2000.0f); // assign that frequency
+	t808Hihat_setStretch(&myHihat, (tRamp_tick(&adc[1])*2.0f));
+	//t808Hihat_setFM(&myHihat, tRamp_tick(&adc[5]) * 2000.0f); // assign that frequency
 	//float CVGain = LEAF_clip(0.0f, tRamp_tick(&adc[9]) + tRamp_tick(&adc[7]), 1.0f);
 	t808Hihat_setOscNoiseMix(&myHihat[0], tRamp_tick(&adc[0]));
 	t808Hihat_setDecay(&myHihat[0], (tRamp_tick(&adc[3]) * 1000.0f) + (tRamp_tick(&adc[10]) * 1000.0f));
@@ -178,7 +178,8 @@ float audioTickL(float audioIn)
 float audioTickR(float audioIn)
 {
 
-	LEAF_shaper(sample, 1.2f);
+	sample *= 5.0f;
+	LEAF_shaper(sample, 2.0f);
 	return sample;
 }
 
