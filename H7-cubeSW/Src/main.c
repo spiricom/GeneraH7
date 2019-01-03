@@ -88,8 +88,13 @@ uint16_t myADC[NUM_ADC_CHANNELS] __ATTR_RAM_D2;
 int counter = 0;
 int internalcounter = 0;
 
+/*flash memory testing
+uint32_t testBits[8] = {1234567,1234567,1234567,1234567,65535,65535,65535,65535};
 
-
+float pattern[32] = {1.0f, .9f, .8f, .7f, .6f, .5f, .4f, .3f, .2f, .1f, 0.f, -.1f, -.2f, -.3f, -.4f, -.5f, -.6f, -.7f, -.8f, -.9f, -.1f, -.9f, -.8f, -.7f, -.6f, -.5f, -.4f, -.3f, -.2f, -.1f, -.0f, .1f};
+uint32_t wordSize = 32;
+uint32_t i = 0;
+*/
 
 /* USER CODE END PV */
 
@@ -157,6 +162,29 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+
+
+
+/*
+  //test flash variable writing
+  HAL_FLASH_Unlock();
+  __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGSERR );
+  FLASH_Erase_Sector(FLASH_SECTOR_0, FLASH_BANK_2, VOLTAGE_RANGE_3);
+
+  for (i = 0; i < 4; i++)
+  {
+	  int offset = (i * wordSize);
+	  int otherOffset = (i * 8);
+	  HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, (0x08100020 + offset),(uint32_t)&pattern);
+  }
+  //write little "already written" flag into memory
+  HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, 0x08100000, (uint32_t) &testBits);
+
+
+  HAL_FLASH_Lock();
+
+*/
+
 
   //set up the timers that control PWM dimming on RGB LEDs
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);

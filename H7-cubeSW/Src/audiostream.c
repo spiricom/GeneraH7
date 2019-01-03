@@ -178,8 +178,8 @@ float audioTickL(float audioIn)
 float audioTickR(float audioIn)
 {
 
-	sample *= 5.0f;
-	LEAF_shaper(sample, 2.0f);
+	sample *= 2.0f;
+	LEAF_shaper(sample, 1.6f);
 	return sample;
 }
 
