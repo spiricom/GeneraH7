@@ -10,6 +10,11 @@
 int32_t audioOutBuffer[AUDIO_BUFFER_SIZE] __ATTR_RAM_D2;
 int32_t audioInBuffer[AUDIO_BUFFER_SIZE] __ATTR_RAM_D2;
 
+//example
+const static volatile uint32_t myFlagBit[8] __ATTR_STATIC_DATA;
+const static volatile float sineLookup[32] __ATTR_STATIC_DATA;
+//const static volatile float square1Lookup[2048] __ATTR_STATIC_DATA;
+
 void audioFrame(uint16_t buffer_offset);
 float audioTickL(float audioIn); 
 float audioTickR(float audioIn);
@@ -131,9 +136,12 @@ uint32_t startingAddressOfWaveform = 0x08100020;
 
 float audioTickL(float audioIn)
 {
-
-	sample = readFloatFromFlash(startingAddressOfWaveform + ((sample_counter % 32) * 4));
-	sample_counter++;
+	if (myFlagBit[0] == 1234567) // I added this because if myFlagBit was unused, then the compiler seemed to optimize it out and sineLookup started at 0x08100000 instead of 0x08100020 as intended
+	{
+		//sample = readFloatFromFlash(startingAddressOfWaveform + ((sample_counter % 32) * 4));
+		sample = sineLookup[sample_counter];
+		sample_counter++;
+	}
 
 	return sample;
 }

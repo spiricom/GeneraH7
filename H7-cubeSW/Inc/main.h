@@ -93,6 +93,7 @@ void Error_Handler(void);
 
 #define __ATTR_RAM_D2	__attribute__ ((section(".RAM_D2"))) __attribute__ ((aligned (32)))
 #define __ATTR_RAM_D3	__attribute__ ((section(".RAM_D3"))) __attribute__ ((aligned (32)))
+#define __ATTR_STATIC_DATA	__attribute__ ((section("STATIC_DATA"))) __attribute__ ((aligned (32)))
 
 
 float randomNumber(void);

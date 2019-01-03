@@ -66,6 +66,8 @@ RAM_D2 (xrw)      : ORIGIN = 0x30000000, LENGTH = 288K
 RAM_D3 (xrw)      : ORIGIN = 0x38000000, LENGTH = 64K
 ITCMRAM (xrw)      : ORIGIN = 0x00000000, LENGTH = 64K
 FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 1024K
+/* this idea comes from https://electronics.stackexchange.com/questions/370175/creating-programmable-look-up-table-on-stm32 */
+FIXED_DATA(rw)  : ORIGIN = 0x8100000, LENGTH = 1024K
 }
 
 /* Define output sections */
@@ -191,6 +193,11 @@ SECTIONS
         KEEP(*(.RAM_D3)) /* ORIGIN = 0x38000000, LENGTH = 64K */
   } >RAM_D3
 
+/* also from https://electronics.stackexchange.com/questions/370175/creating-programmable-look-up-table-on-stm32 */
+ .FIXED_DATA (NOLOAD):
+  {
+    *(STATIC_DATA);
+  } >FIXED_DATA 
 
 
 

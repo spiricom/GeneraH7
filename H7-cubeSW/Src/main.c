@@ -92,7 +92,8 @@ int internalcounter = 0;
 uint32_t testBits[8] = {1234567};
 
 float pattern[32] = {.99f, .9f, .8f, .7f, .6f, .5f, .4f, .3f, .2f, .1f, 0.f, -.1f, -.2f, -.3f, -.4f, -.5f, -.6f, -.7f, -.8f, -.9f, -.99f, -.9f, -.8f, -.7f, -.6f, -.5f, -.4f, -.3f, -.2f, -.1f, -.0f, .1f};
-uint32_t wordSize = 32;
+uint32_t wordSizeInBytes = 32;
+uint32_t wordSizeDividedByDataTypeSize = (32/4);
 uint32_t i = 0;
 
 
@@ -176,8 +177,8 @@ int main(void)
 
 	  for (i = 0; i < 4; i++)
 	  {
-		  int offset = (i * wordSize);
-		  int otherOffset = (i * 8);
+		  int offset = (i * wordSizeInBytes);
+		  int otherOffset = (i * wordSizeDividedByDataTypeSize);
 		  HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, (0x08100020 + offset),(uint32_t)&pattern[otherOffset]);
 	  }
 	  //write little "already written" flag into memory
