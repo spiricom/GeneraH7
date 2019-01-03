@@ -167,7 +167,7 @@ int main(void)
 
 
   //test flash variable writing
-  if (*(__IO uint32_t*) (0x08100000) != 1234566)
+  if (*(__IO uint32_t*) (0x08100000) != 1234567)
   {
 
 	  HAL_FLASH_Unlock();
