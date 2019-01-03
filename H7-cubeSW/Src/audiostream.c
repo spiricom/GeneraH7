@@ -33,16 +33,23 @@ float sample = 0.0f;
 
 uint16_t frameCounter = 0;
 
+
 //audio objects
 tRamp adc[12];
-tCycle mySine[2];
-t808Snare myHihat[2];
+
 /**********************************************/
 
 typedef enum BOOL {
 	FALSE = 0,
 	TRUE
 } BOOL;
+
+
+float readFloatFromFlash(uint32_t address)
+{
+	return *(__IO float*) address;
+}
+
 
 
 void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTypeDef* hsaiIn, uint16_t* adc_array)
@@ -77,8 +84,6 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 		//if you want to read different knobs/jacks at different rates or with different smoothing times, you can reinit after this
 	}
 
-	t808Hihat_init (&myHihat[0]);
-	t808Hihat_init(&myHihat[1]);
 	//now to send all the necessary messages to the codec
 	AudioCodec_init(hi2c);
 
@@ -121,57 +126,15 @@ void audioFrame(uint16_t buffer_offset)
 	}
 }
 
-uint8_t hatTriggered = 0;
+uint32_t sample_counter = 0;
+uint32_t startingAddressOfWaveform = 0x08100020;
 
 float audioTickL(float audioIn)
 {
-	//read the analog inputs and smooth them with ramps
-	tRamp_setDest(&adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[2], 1.0f - (adcVals[2] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[3], 1.0f - (adcVals[3] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[4], 1.0f - (adcVals[4] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[6], 1.0f - (adcVals[6] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[7], 1.0f - (adcVals[7] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[8], (adcVals[8] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[9], (adcVals[9] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[10], (adcVals[10] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[11], (adcVals[11] * INV_TWO_TO_16));
 
-	float drumGain = LEAF_clip(0.0f, tRamp_tick(&adc[7]) + tRamp_tick(&adc[9]), 2.0f);
-	//if digital input on jack 5, then trigger drum/hihat
+	sample = readFloatFromFlash(startingAddressOfWaveform + ((sample_counter % 32) * 4));
+	sample_counter++;
 
-	if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12)) == 1)
-	{
-		if (hatTriggered == 0)
-		{
-			t808Hihat_on(&myHihat[0], drumGain);
-			hatTriggered = 1;
-		}
-	}
-	else
-	{
-		hatTriggered = 0;
-	}
-
-
-	//OK, now some audio stuff
-
-
-	float newFreq = LEAF_clip(0.0f, LEAF_midiToFrequency(tRamp_tick(&adc[4]) * 100.0f) + (tRamp_tick(&adc[10])* 100.0f) + (audioIn * tRamp_tick(&adc[1]) * 1000.0f), 24000.0f); // knob 5 sets initial frequency, jack 5 lets in audio, and knob 2 sets the amount that the audio FMs the hihat pitch
-
-	//t808Hihat_setOscBandpassQ( &myHat, LEAF_clip (0.1f, (tRamp_tick(&adc[11]) * 3.0f), 3.0f));
-	t808Hihat_setHighpassFreq(&myHihat[0], LEAF_midiToFrequency(tRamp_tick(&adc[2]) * 127.0f)); //knob 4 sets hipass freq
-	t808Hihat_setStretch(&myHihat, (tRamp_tick(&adc[1])*2.0f));
-	//t808Hihat_setFM(&myHihat, tRamp_tick(&adc[5]) * 2000.0f); // assign that frequency
-	//float CVGain = LEAF_clip(0.0f, tRamp_tick(&adc[9]) + tRamp_tick(&adc[7]), 1.0f);
-	t808Hihat_setOscNoiseMix(&myHihat[0], tRamp_tick(&adc[0]));
-	t808Hihat_setDecay(&myHihat[0], (tRamp_tick(&adc[3]) * 1000.0f) + (tRamp_tick(&adc[10]) * 1000.0f));
-	t808Hihat_setOscFreq(&myHihat[0], newFreq);
-	sample = t808Hihat_tick(&myHihat);
-	LEAF_shaper(sample, 1.6f);
-	//sample = tNoise_tick(&myNoise);
 	return sample;
 }
 
@@ -182,6 +145,8 @@ float audioTickR(float audioIn)
 	LEAF_shaper(sample, 1.6f);
 	return sample;
 }
+
+
 
 
 void buttonCheck(void)
