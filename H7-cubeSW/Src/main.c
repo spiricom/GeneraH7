@@ -103,6 +103,103 @@ void MPU_Conf(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+//
+
+/*
+ * setup for Hihat Genera patch
+ *
+ * <<<<if using 8 knob / 8 jack version>>>>
+ *
+ * IO board channel 5 = both jumpers set to input
+ * IO board channel 6 = both jumpers set to input
+ * IO board channel 7 = both jumpers set to input
+ * IO board channel 8 = both jumpers set to input
+ * jumper A = 3
+ * jumper B = 3
+ * jumper C = 3
+ * jumper D = 3
+ * jumper E = 3
+ * jumper F = 3
+ * jumper G = 1
+ * jumper H = 1
+ * jumper K = 3
+ * jumper L = 3
+ * jumper M = 3
+ * jumper N = 3
+ * all other jumpers not necessary
+ *
+ *
+ *  functionality :
+ *  knob 1 = volume
+ *  knob 2 = snare noise/tone mix
+ *  knob 3 = snare pitch
+ *  knob 4 = snare decay
+ *  knob 5 = kick pitch
+ *  knob 6 = kick decay
+ *  knob 7 = n/a
+ *  knob 8 = n/a
+ *  jack 1 = volume CV (added to knob 1)
+ *  jack 2 = snare pitch CV (added to knob 3)
+ *  jack 3 = snare decay CV (added to knob 4)
+ *  jack 4 = kick decay CV (added to knob 6)
+ *  jack 5 = trigger snare
+ *  jack 6 = trigger kick
+ *  jack 7 = audio output snare
+ *  jack 8 = audio output kick
+ *
+ *
+ *
+ *
+ *
+ * <<<<if using 6 knob / 12 jack version>>>>
+ *
+ * IO board channel 3 = both jumpers set to input
+ * IO board channel 4 = both jumpers set to input
+ * IO board channel 5 = both jumpers set to input
+ * IO board channel 6 = both jumpers set to input
+ * IO board channel 7 = both jumpers set to input
+ * IO board channel 8 = both jumpers set to input
+ * jumper A = 3
+ * jumper B = 3
+ * jumper C = 3
+ * jumper D = 3
+ * jumper E = 3
+ * jumper F = 3
+ * jumper G = 1
+ * jumper H = 1
+ * jumper K = 3
+ * jumper L = 3
+ * jumper M = 1
+ * jumper N = 1
+ * jumper O = 3
+ * all other jumpers not necessary
+ *
+ *  functionality :
+ *  knob 1 = volume
+ *  knob 2 = snare noise/tone mix
+ *  knob 3 = snare pitch
+ *  knob 4 = snare decay
+ *  knob 5 = kick pitch
+ *  knob 6 = kick decay
+ *  jack 1 = volume CV (added to knob 1)
+ *  jack 2 = snare pitch CV (added to knob 3)
+ *  jack 3 = snare decay CV (added to knob 4)
+ *  jack 4 = kick decay CV (added to knob 6)
+ *  jack 5 = trigger snare
+ *  jack 6 = trigger kick
+ *  jack 7 = audio output snare
+ *  jack 8 = audio output kick
+ *  jack 9 = n/a
+ *  jack 10 = n/a
+ *  jack 11 = n/a
+ *  jack 12 = n/a
+ */
+
+///
+
+
+
 /* USER CODE END 0 */
 
 /**
