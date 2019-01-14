@@ -107,7 +107,7 @@ void MPU_Conf(void);
 //
 
 /*
- * setup for Hihat Genera patch
+ * setup for Snare and Kick Genera patch
  *
  * <<<<if using 8 knob / 8 jack version>>>>
  *
