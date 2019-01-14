@@ -12,8 +12,8 @@
 <targetDefinitions>
   <board id="h7-cubesw">
     <name>H7-cubeSW</name>
-    <dbgIF>JTAG</dbgIF>
     <dbgIF>SWD</dbgIF>
+    <dbgIF>JTAG</dbgIF>
     <dbgDEV>ST-Link</dbgDEV>
     <mcuId>stm32h743vitx</mcuId>
   </board>

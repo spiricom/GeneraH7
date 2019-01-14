@@ -108,6 +108,102 @@ void MPU_Conf(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+
+//
+
+/*
+ * setup for Hihat Genera patch
+ *
+ * <<<<if using 8 knob / 8 jack version>>>>
+ *
+ * IO board channel 5 = both jumpers set to input
+ * IO board channel 6 = both jumpers set to input
+ * IO board channel 7 = both jumpers set to input
+ * IO board channel 8 = both jumpers set to input
+ * jumper A = 3
+ * jumper B = 3
+ * jumper C = 3
+ * jumper D = 3
+ * jumper E = 3
+ * jumper F = 1
+ * jumper G = 1
+ * jumper H = 1
+ * jumper K = 3
+ * jumper L = 3
+ * jumper M = 3
+ * jumper N = 3
+ * all other jumpers not necessary
+ *
+ *
+ *  functionality :
+ *  knob 1 = volume
+ *  knob 2 = noise vs pitch
+ *  knob 3 = hipass cutoff
+ *  knob 4 = decay time
+ *  knob 5 = pitch
+ *  knob 6 = pitch CV amount
+ *  knob 7 = stick click bandpass cutoff
+ *  knob 8 = stick click bandpass resonance
+ *  jack 1 = volume CV (added to knob 1)
+ *  jack 2 = pitch CV (added to knob 5, amount determined by knob 6)
+ *  jack 3 = decay CV (added to knob 4)
+ *  jack 4 = oscillator bandpass frequency CV
+ *  jack 5 = trigger
+ *  jack 6 = FM audio input
+ *  jack 7 = audio output clean
+ *  jack 8 = audio output drive
+ *
+ *
+ *
+ *
+ *
+ * <<<<if using 6 knob / 12 jack version>>>>
+ *
+ * IO board channel 3 = both jumpers set to input
+ * IO board channel 4 = both jumpers set to input
+ * IO board channel 5 = both jumpers set to input
+ * IO board channel 6 = both jumpers set to input
+ * IO board channel 7 = both jumpers set to input
+ * IO board channel 8 = both jumpers set to input
+ * jumper A = 3
+ * jumper B = 3
+ * jumper C = 3
+ * jumper D = 3
+ * jumper E = 3
+ * jumper F = 1
+ * jumper G = 1
+ * jumper H = 1
+ * jumper K = 3
+ * jumper L = 3
+ * jumper M = 1
+ * jumper N = 1
+ * jumper O = 3
+ * all other jumpers not necessary
+ *
+ *  *  functionality :
+ *  knob 1 = volume
+ *  knob 2 = noise vs pitch
+ *  knob 3 = hipass cutoff
+ *  knob 4 = decay time
+ *  knob 5 = pitch
+ *  knob 6 = pitch CV amount
+ *  jack 1 = volume CV (added to knob 1)
+ *  jack 2 = pitch CV (added to knob 5, amount determined by knob 6)
+ *  jack 3 = decay CV (added to knob 4)
+ *  jack 4 = oscillator bandpass frequency CV
+ *  jack 5 = trigger
+ *  jack 6 = FM audio input
+ *  jack 7 = audio output clean
+ *  jack 8 = audio output drive
+ *  jack 9 = n/a
+ *  jack 10 = n/a
+ *  knob 11 = stick click bandpass cutoff CV
+ *  knob 12 = stick click bandpass resonance CV
+ */
+
+///
+
+
 /* USER CODE END 0 */
 
 /**
@@ -164,28 +260,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
 
-
-/*
-  //test flash variable writing
-  HAL_FLASH_Unlock();
-  __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR | FLASH_FLAG_PGSERR );
-  FLASH_Erase_Sector(FLASH_SECTOR_0, FLASH_BANK_2, VOLTAGE_RANGE_3);
-
-  for (i = 0; i < 4; i++)
-  {
-	  int offset = (i * wordSize);
-	  int otherOffset = (i * 8);
-	  HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, (0x08100020 + offset),(uint32_t)&pattern);
-  }
-  //write little "already written" flag into memory
-  HAL_FLASH_Program(FLASH_TYPEPROGRAM_FLASHWORD, 0x08100000, (uint32_t) &testBits);
-
-
-  HAL_FLASH_Lock();
-
-*/
-
-
   //set up the timers that control PWM dimming on RGB LEDs
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
@@ -210,7 +284,7 @@ int main(void)
 	configure_Jack(3, ANALOG_INPUT); //jack 3 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
 	configure_Jack(4, ANALOG_INPUT); //jack 4 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
 	configure_Jack(5, DIGITAL_INPUT); //jack 5 can be DIGITAL_INPUT, or AUDIO_INPUT
-	configure_Jack(6, DIGITAL_INPUT); //jack 6 can be DIGITAL_INPUT, or AUDIO_INPUT
+	configure_Jack(6, AUDIO_INPUT); //jack 6 can be DIGITAL_INPUT, or AUDIO_INPUT
 	configure_Jack(7, AUDIO_OUTPUT); //jack 7 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
 	configure_Jack(8, AUDIO_OUTPUT); //jack 8 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
 
