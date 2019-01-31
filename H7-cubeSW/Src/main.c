@@ -1,41 +1,8 @@
 /* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  ** This notice applies to any and all portions of this file
-  * that are not between comment pairs USER CODE BEGIN and
-  * USER CODE END. Other portions of this file, whether 
-  * inserted by the user or by software development tools
-  * are owned by their respective copyright owners.
-  *
-  * COPYRIGHT(c) 2018 STMicroelectronics
-  *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of STMicroelectronics nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
-  *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  ******************************************************************************
-  */
+//
+// Genera Eurorack H7 board
+// by Snyderphonics
+//
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
@@ -78,6 +45,7 @@
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
+//these are by rough testing measurement, to even out the control of the RGB led so each color is equal in strength
 uint16_t redScaled[17] = {0, 6550, 6660, 6750, 6840, 7000, 7080, 7170, 7250, 7350, 7550, 7900, 8200, 8500, 9300, 9900, 11000};
 uint16_t greenScaled[17] = {0, 8, 9, 10, 11, 13, 16, 22, 30, 40, 60, 110, 180, 300, 400, 700, 900};
 uint16_t blueScaled[17] = {0, 8, 9, 10, 11, 14, 17, 22, 25, 30, 40, 50, 70, 90, 150, 250, 300};
@@ -200,19 +168,59 @@ int main(void)
 
 	  //look at the configure_Jack function for notes on how to set the physical jumpers for each setting
 	  configure_Jack(1, ANALOG_INPUT); //jack 1 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
-	  configure_Jack(2, ANALOG_INPUT); //jack 2 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
-	  configure_Jack(3, ANALOG_OUTPUT); //jack 3 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
-	  configure_Jack(4, ANALOG_OUTPUT); //jack 4 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
-	  configure_Jack(5, AUDIO_INPUT); //jack 5 can be DIGITAL_INPUT, or AUDIO_INPUT
-	  configure_Jack(6, AUDIO_INPUT); //jack 6 can be DIGITAL_INPUT, or AUDIO_INPUT
-	  configure_Jack(7, AUDIO_OUTPUT); //jack 7 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
-	  configure_Jack(8, AUDIO_OUTPUT); //jack 8 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
+	     // for Digital or Analog Input ---  jumpers on I/O board channel 5 set to input
+	  	 // for Digital Output --- jumpers on I/O board channel 5 set to output
 
-	  //comment these in and configure them if you are using a Genera version with 12 knobs and 6 jacks instead of an 8knob/8jack version
+	  configure_Jack(2, ANALOG_INPUT); //jack 2 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+	     // for Digital or Analog Input ---  jumpers on I/O board channel 6 set to input
+	  	 // for Digital Output --- jumpers on I/O board channel 6 set to output
+
+	  configure_Jack(3, ANALOG_OUTPUT); //jack 3 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
+	     // for Digital or Analog Input ---  jumpers on I/O board channel 7 set to input, and jumpers A and B to 3
+	  	 // for Digital Output --- jumpers on I/O board channel 7 set to output, and jumpers A and B to 3
+	     // for Analog Output --- jumpers A and B to 1
+
+	  configure_Jack(4, ANALOG_OUTPUT); //jack 4 can be DIGITAL_INPUT, DIGITAL_OUTPUT, ANALOG_INPUT (CV in), or ANALOG_OUTPUT (CV out)
+	     // for Digital or Analog Input ---  jumpers on I/O board channel 8 set to input, and jumpers C and D to 3
+	  	 // for Digital Output --- jumpers on I/O board channel 8 set to output, and jumpers C and D to 3
+	     // for Analog Output --- jumpers C and D to 1
+
+	  configure_Jack(5, AUDIO_INPUT); //jack 5 can be DIGITAL_INPUT, or AUDIO_INPUT
+	  	  // for Digital Input --- set jumper E to 3
+	      // for Audio Input --- set jumper E to 1
+
+	  configure_Jack(6, AUDIO_INPUT); //jack 6 can be DIGITAL_INPUT, or AUDIO_INPUT
+  	  	  // for Digital Input --- set jumper F to 3
+      	  // for Audio Input --- set jumper F to 1
+
+	  configure_Jack(7, AUDIO_OUTPUT); //jack 7 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
+  	  	  // for Digital Output --- set jumper G to 3
+	  	  // for Audio Output --- set jumper G to 1
+
+	  configure_Jack(8, AUDIO_OUTPUT); //jack 8 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
+  	  	  // for Digital Output --- set jumper H to 3
+      	  // for Audio Output --- set jumper H to 1
+
+	  //comment the following jack configurations in and configure them if you are using a Genera version with 12 knobs and 6 jacks instead of an 8knob/8jack version
+
 	  //configure_Jack(9, DIGITAL_OUTPUT); //jack 9 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 5
+		 //for Digital Input --- set "I/O board 1" to input (both jumpers), and set jumper I to 3
+		 //for Digital Output --- set "I/O board 1" to output (both jumpers), and set jumper I to 3
+		 //for Analog Input --- set "I/O board 1" to input (both jumpers), and set jumper I to 1 and jumper K to 1 (takes away input from knob 5)
+
 	  //configure_Jack(10, DIGITAL_INPUT); //jack 10 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 6
+	  	  //for Digital Input --- set "I/O board 2" to input (both jumpers), and set jumper J to 3
+	  	  //for Digital Output --- set "I/O board 2" to output (both jumpers), and set jumper J to 3
+	  	  //for Analog Input --- set "I/O board 2" to input (both jumpers), and set jumper J to 1 and jumper L to 1 (takes away input from knob 6)
+
 	  //configure_Jack(11, ANALOG_INPUT); //jack 11 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+	  	  //for Digital and Analog Input --- set "I/O board 3" to input (both jumpers), and set jumper M to 1
+	  	  //for Digital Output --- set "I/O board 3" to output (both jumpers), and set jumper M to 1
+
 	  //configure_Jack(12, ANALOG_INPUT); //jack 12 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
+  	  	  //for Digital and Analog Input --- set "I/O board 4" to input (both jumpers), set jumper N to 1, and jumper O to 3
+  	  	  //for Digital Output --- set "I/O board 4" to output (both jumpers), set jumper N to 1, and jumper O to 3
+
 
 	  if (DAC1_active == 1)
 	  {
