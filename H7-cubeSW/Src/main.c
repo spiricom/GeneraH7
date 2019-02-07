@@ -62,7 +62,6 @@ typedef enum
 }jackModeType;
 
 
-#define NUM_ADC_CHANNELS 12
 uint16_t myADC[NUM_ADC_CHANNELS] __ATTR_RAM_D2;
 int counter = 0;
 int internalcounter = 0;

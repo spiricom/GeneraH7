@@ -61,6 +61,7 @@ extern "C" {
 //#define SAMPLERATE96K
 #define SAMPLERATE48K
 
+#define NUM_ADC_CHANNELS 12
 
 /* USER CODE END Includes */
 

@@ -37,7 +37,7 @@ float sample = 0.0f;
 uint16_t frameCounter = 0;
 
 //audio objects
-tRamp adc[8];
+tRamp adc[NUM_ADC_CHANNELS];
 tCycle mySine[2];
 
 /**********************************************/
@@ -74,7 +74,7 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 		// the CVs come in as expected (0V = 0, 10V = 65535)
 
 
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < NUM_ADC_CHANNELS; i++)
 	{
 		tRamp_init(&adc[i],7.0f, 1); //set all ramps for knobs to be 7ms ramp time and let the init function know they will be ticked every sample
 	}
@@ -126,8 +126,8 @@ void audioFrame(uint16_t buffer_offset)
 float audioTickL(float audioIn)
 {
 	tRamp_setDest(&adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[4], 1.0f - (adcVals[4] * INV_TWO_TO_16));
-	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[4]) * 1000.0f);
+	tRamp_setDest(&adc[8], 1.0f - (adcVals[8] * INV_TWO_TO_16));
+	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[8]) * 1000.0f);
 	tCycle_setFreq(&mySine[0], newFreq);
 	sample = tCycle_tick(&mySine[0]);
 	return sample * .9f;
