@@ -39,6 +39,7 @@ uint16_t frameCounter = 0;
 //audio objects
 tRamp adc[NUM_ADC_CHANNELS];
 tCycle mySine[2];
+tCrusher myCrusher;
 
 /**********************************************/
 
@@ -81,6 +82,8 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 
 	tCycle_init(&mySine[0]);
 	tCycle_init(&mySine[1]);
+
+	tCrusher_init(&myCrusher);
 	//now to send all the necessary messages to the codec
 	AudioCodec_init(hi2c);
 
@@ -125,23 +128,36 @@ void audioFrame(uint16_t buffer_offset)
 
 float audioTickL(float audioIn)
 {
-	tRamp_setDest(&adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
+
+	tRamp_setDest(&adc[0], (adcVals[8] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[1], (adcVals[9] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[2], (adcVals[10] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[3], (adcVals[11] * INV_TWO_TO_16));
+
+	tCrusher_setOperation(&myCrusher, tRamp_tick(&adc[0]));
+	tCrusher_setQuality(&myCrusher, tRamp_tick(&adc[1]));
+	tCrusher_setRound(&myCrusher, tRamp_tick(&adc[2]));
+	tCrusher_setSamplingRatio(&myCrusher, tRamp_tick(&adc[3]));
+	/*
 	tRamp_setDest(&adc[8], 1.0f - (adcVals[8] * INV_TWO_TO_16));
 	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[8]) * 1000.0f);
 	tCycle_setFreq(&mySine[0], newFreq);
-	sample = tCycle_tick(&mySine[0]);
+	sample = tCycle_tick(&mySine[0]); */
+	sample = tCrusher_tick(&myCrusher, audioIn);
+
 	return sample * .9f;
 }
 
 float audioTickR(float audioIn)
 {
+	/*
 	sample = audioIn;
 	tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
 	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[1]) * 127.0f) + (audioIn * tRamp_tick(&adc[5]) * 1000.0f);
 	tCycle_setFreq(&mySine[1], newFreq);
 	sample = tCycle_tick(&mySine[1]);
-	return sample * .9f;
+	return sample * .9f; */
 }
 
 
