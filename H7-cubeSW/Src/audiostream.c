@@ -42,6 +42,7 @@ tRamp adc[12];
 tCycle mySine[2];
 tSVF bandPasses[NUM_BANDPASSES];
 
+//tCrusher myCrusher;
 
 /**********************************************/
 
@@ -101,6 +102,8 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 		audioOutBuffer[i] = 0;
 	}
 
+	//tCrusher_init(&myCrusher);
+
 	// set up the I2S driver to send audio data to the codec (and retrieve input as well)
 	transmit_status = HAL_SAI_Transmit_DMA(hsaiOut, (uint8_t *)&audioOutBuffer[0], AUDIO_BUFFER_SIZE);
 	receive_status = HAL_SAI_Receive_DMA(hsaiIn, (uint8_t *)&audioInBuffer[0], AUDIO_BUFFER_SIZE);
@@ -134,6 +137,7 @@ void audioFrame(uint16_t buffer_offset)
 }
 
 float sample2 = 0.0f;
+int currentBP = 0;
 
 float audioTickL(float audioIn)
 {
@@ -145,11 +149,13 @@ float audioTickL(float audioIn)
 	//tRamp_setDest(&adc[2], 1.0f -(adcVals[2] * INV_TWO_TO_16));
 	//tRamp_setDest(&adc[3], 1.0f -(adcVals[3] * INV_TWO_TO_16));
 
+	tSVF_setQ(&bandPasses[currentBP % NUM_BANDPASSES], adcVals[4] * INV_TWO_TO_16 * 2000.0f);
+
+
+	currentBP++;
 
 	for (int i = 0; i < NUM_BANDPASSES; i++)
 	{
-		tSVF_setQ(&bandPasses[i], adcVals[0] * INV_TWO_TO_16 * 2000.0f);
-
 		//if ((i & 1) == 1)
 		{
 			sample += tSVF_tick(&bandPasses[i], audioIn);
@@ -160,19 +166,35 @@ float audioTickL(float audioIn)
 		}
 	}
 	return LEAF_softClip(sample * 0.01f, .8f);
+
+
 }
 
 float audioTickR(float audioIn)
 {
+/*
+	tRamp_setDest(&adc[0], (adcVals[8] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[1], (adcVals[9] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[2], (adcVals[10] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[3], (adcVals[11] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[4], (adcVals[0] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[5], (adcVals[1] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[6], (adcVals[2] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[7], (adcVals[3] * INV_TWO_TO_16));
+
+	tCrusher_setOperation(&myCrusher, tRamp_tick(&adc[0]) + tRamp_tick(&adc[4]));
+	tCrusher_setQuality(&myCrusher, tRamp_tick(&adc[1]) + tRamp_tick(&adc[5]));
+	tCrusher_setRound(&myCrusher, tRamp_tick(&adc[2])  + tRamp_tick(&adc[6]));
+	tCrusher_setSamplingRatio(&myCrusher, tRamp_tick(&adc[3]) + tRamp_tick(&adc[7]));
 	/*
-	sample = audioIn;
-	tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
-	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[1]) * 127.0f) + (audioIn * tRamp_tick(&adc[5]) * 1000.0f);
-	tCycle_setFreq(&mySine[1], newFreq);
-	sample = tCycle_tick(&mySine[1]);
-	return sample * .9f; */
-	//return sample2 * 0.002f;
+	tRamp_setDest(&adc[8], 1.0f - (adcVals[8] * INV_TWO_TO_16));
+	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[8]) * 1000.0f);
+	tCycle_setFreq(&mySine[0], newFreq);
+	sample = tCycle_tick(&mySine[0]); */
+	//sample = tCrusher_tick(&myCrusher, audioIn);
+
+	return sample * .9f;
+
 }
 
 
@@ -203,6 +225,12 @@ void buttonCheck(void)
 	if (buttonPressed[0] == 1)
 	{
 		RGB_mode++;
+
+		for (int i = 0; i < NUM_BANDPASSES; i++)
+		{
+			tSVF_setFreq(&bandPasses[i], ((randomNumber() + 1.0f) * 5000.0f) + 40.0f);
+		}
+
 		if (RGB_mode > 3)
 		{
 			RGB_mode = 0;
