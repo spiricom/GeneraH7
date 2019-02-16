@@ -25,7 +25,7 @@ int mode2 = 1;
 int mode3 = 1;
 int RGB_mode = 3;
 
-#define NUM_BANDPASSES 50
+#define NUM_BANDPASSES 20
 #define NUM_BUTTONS 4
 uint8_t buttonValues[NUM_BUTTONS];
 uint8_t buttonValuesPrev[NUM_BUTTONS];
@@ -42,7 +42,7 @@ tRamp adc[12];
 tCycle mySine[2];
 tSVF bandPasses[NUM_BANDPASSES];
 
-//tCrusher myCrusher;
+tCrusher myCrusher;
 
 /**********************************************/
 
@@ -102,7 +102,7 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 		audioOutBuffer[i] = 0;
 	}
 
-	//tCrusher_init(&myCrusher);
+	tCrusher_init(&myCrusher);
 
 	// set up the I2S driver to send audio data to the codec (and retrieve input as well)
 	transmit_status = HAL_SAI_Transmit_DMA(hsaiOut, (uint8_t *)&audioOutBuffer[0], AUDIO_BUFFER_SIZE);
@@ -172,7 +172,7 @@ float audioTickL(float audioIn)
 
 float audioTickR(float audioIn)
 {
-/*
+
 	tRamp_setDest(&adc[0], (adcVals[8] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[1], (adcVals[9] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[2], (adcVals[10] * INV_TWO_TO_16));
@@ -186,12 +186,14 @@ float audioTickR(float audioIn)
 	tCrusher_setQuality(&myCrusher, tRamp_tick(&adc[1]) + tRamp_tick(&adc[5]));
 	tCrusher_setRound(&myCrusher, tRamp_tick(&adc[2])  + tRamp_tick(&adc[6]));
 	tCrusher_setSamplingRatio(&myCrusher, tRamp_tick(&adc[3]) + tRamp_tick(&adc[7]));
+
 	/*
 	tRamp_setDest(&adc[8], 1.0f - (adcVals[8] * INV_TWO_TO_16));
 	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[8]) * 1000.0f);
 	tCycle_setFreq(&mySine[0], newFreq);
+
 	sample = tCycle_tick(&mySine[0]); */
-	//sample = tCrusher_tick(&myCrusher, audioIn);
+	sample = tCrusher_tick(&myCrusher, audioIn);
 
 	return sample * .9f;
 
