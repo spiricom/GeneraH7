@@ -1,4 +1,4 @@
-/* USER CODE BEGIN Header */
+s/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file           : main.c
