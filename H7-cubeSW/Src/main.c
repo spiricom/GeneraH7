@@ -156,19 +156,19 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_BDMA_Init();
+  //MX_BDMA_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_I2C2_Init();
-  MX_QUADSPI_Init();
+  //MX_QUADSPI_Init();
   MX_RNG_Init();
   MX_SAI1_Init();
-  MX_SPI4_Init();
+  //MX_SPI4_Init();
   MX_I2C4_Init();
-  MX_TIM3_Init();
-  MX_TIM1_Init();
+  //MX_TIM3_Init();
+  //MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-
+/*
   //set up the timers that control PWM dimming on the LEDs
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
@@ -185,7 +185,8 @@ int main(void)
 
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_3, 0);
   __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, 0);
-
+*/
+  /*
   //look at the configure_Jack function for notes on how to set the physical jumpers for each setting
   configure_Jack(1, ANALOG_INPUT); //jack 1 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
   configure_Jack(2, ANALOG_INPUT); //jack 2 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
@@ -195,16 +196,16 @@ int main(void)
   configure_Jack(6, AUDIO_INPUT); //jack 6 can be DIGITAL_INPUT, or AUDIO_INPUT
   configure_Jack(7, AUDIO_OUTPUT); //jack 7 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
   configure_Jack(8, AUDIO_OUTPUT); //jack 8 can be DIGITAL_OUTPUT, or AUDIO_OUTPUT
-
+*/
   //comment these in and configure them if you are using a Genera version with 12 knobs and 6 jacks instead of an 8knob/8jack version
   //configure_Jack(9, DIGITAL_OUTPUT); //jack 9 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 5
   //configure_Jack(10, DIGITAL_INPUT); //jack 10 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)  -- analog input takes over the input for knob 6
   //configure_Jack(11, ANALOG_INPUT); //jack 11 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
   //configure_Jack(12, ANALOG_INPUT); //jack 12 can be DIGITAL_INPUT, DIGITAL_OUTPUT, or ANALOG_INPUT (CV in)
 
-	if (HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&myADC, NUM_ADC_CHANNELS) != HAL_OK)
+	//if (HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&myADC, NUM_ADC_CHANNELS) != HAL_OK)
 	{
-		Error_Handler();
+		//Error_Handler();
 
 	}
 	audioInit(&hi2c2, &hsai_BlockA1, &hsai_BlockB1, myADC);
@@ -219,12 +220,12 @@ int main(void)
   {
 
 	  //RGB_LED_setColor(255,255,255);
-	  if (counter > 200000)
+	  if (counter > 2000000)
 	  {
-		  RGB_LED_setColor(internalcounter % 256, internalcounter % 256, internalcounter % 256);
+		  //RGB_LED_setColor(internalcounter % 256, internalcounter % 256, internalcounter % 256);
 		  //__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_4, internalcounter % 8000);
-		 internalcounter++;
-
+		 //internalcounter++;
+		 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, GPIO_PIN_SET); //red LED 1
 		  counter = 0;
 	  }
 	  counter++;

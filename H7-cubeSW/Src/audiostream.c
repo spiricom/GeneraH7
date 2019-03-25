@@ -107,10 +107,10 @@ void audioFrame(uint16_t buffer_offset)
 
 float audioTickL(float audioIn)
 {
-	tRamp_setDest(&adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
-	tRamp_setDest(&adc[4], 1.0f - (adcVals[4] * INV_TWO_TO_16));
-	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[4]) * 1000.0f);
-	tCycle_setFreq(&mySine[0], newFreq);
+	//tRamp_setDest(&adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
+	//tRamp_setDest(&adc[4], 1.0f - (adcVals[4] * INV_TWO_TO_16));
+	//float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[4]) * 1000.0f);
+	tCycle_setFreq(&mySine[0], 440.0f);
 	sample = tCycle_tick(&mySine[0]);
 	return sample * .9f;
 }
@@ -119,8 +119,8 @@ float audioTickR(float audioIn)
 {
 	tRamp_setDest(&adc[1], 1.0f - (adcVals[1] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[5], 1.0f - (adcVals[5] * INV_TWO_TO_16));
-	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[1]) * 127.0f) + (audioIn * tRamp_tick(&adc[5]) * 1000.0f);
-	tCycle_setFreq(&mySine[1], newFreq);
+	float newFreq = LEAF_midiToFrequency(440.0f) + (audioIn * 1000.0f);
+	tCycle_setFreq(&mySine[0], 440.0f);
 	sample = tCycle_tick(&mySine[1]);
 	return sample * .9f;
 }
