@@ -112,6 +112,7 @@ float audioTickL(float audioIn)
 	//float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[4]) * 1000.0f);
 	tCycle_setFreq(&mySine[0], 440.0f);
 	sample = tCycle_tick(&mySine[0]);
+	//sample = audioIn;
 	return sample * .9f;
 }
 
