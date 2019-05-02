@@ -129,23 +129,15 @@ void audioFrame(uint16_t buffer_offset)
 float audioTickL(float audioIn)
 {
 
+	/*
 	tRamp_setDest(&adc[0], (adcVals[8] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[1], (adcVals[9] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[2], (adcVals[10] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[3], (adcVals[11] * INV_TWO_TO_16));
-
-	tCrusher_setOperation(&myCrusher, tRamp_tick(&adc[0]));
-	tCrusher_setQuality(&myCrusher, tRamp_tick(&adc[1]));
-	tCrusher_setRound(&myCrusher, tRamp_tick(&adc[2]));
-	tCrusher_setSamplingRatio(&myCrusher, tRamp_tick(&adc[3]));
-	/*
-	tRamp_setDest(&adc[8], 1.0f - (adcVals[8] * INV_TWO_TO_16));
-	float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[8]) * 1000.0f);
-	tCycle_setFreq(&mySine[0], newFreq);
-	sample = tCycle_tick(&mySine[0]); */
-	sample = tCrusher_tick(&myCrusher, audioIn);
-
-	return sample * .9f;
+	*/
+	tCycle_setFreq(&mySine[1], 440.0f);
+	sample = tCycle_tick(&mySine[1]);
+	return sample;
 }
 
 float audioTickR(float audioIn)
