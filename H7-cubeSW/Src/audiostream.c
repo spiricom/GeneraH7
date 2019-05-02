@@ -37,9 +37,9 @@ float sample = 0.0f;
 uint16_t frameCounter = 0;
 
 //audio objects
-tRamp adc[8];
+tRamp adc[12];
 tCycle mySine[2];
-
+tTapeDelay delay;
 /**********************************************/
 
 typedef enum BOOL {
@@ -72,6 +72,8 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 	{
 		audioOutBuffer[i] = 0;
 	}
+
+	tTapeDelay_init(&delay, 2000.0f, 9600.0f);
 
 	// set up the I2S driver to send audio data to the codec (and retrieve input as well)
 	transmit_status = HAL_SAI_Transmit_DMA(hsaiOut, (uint8_t *)&audioOutBuffer[0], AUDIO_BUFFER_SIZE);
@@ -107,11 +109,17 @@ void audioFrame(uint16_t buffer_offset)
 
 float audioTickL(float audioIn)
 {
-	//tRamp_setDest(&adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
-	//tRamp_setDest(&adc[4], 1.0f - (adcVals[4] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[0], 1.0f - (adcVals[0] * INV_TWO_TO_16));
+	tRamp_setDest(&adc[4], 1.0f - (adcVals[4] * INV_TWO_TO_16));
 	//float newFreq = LEAF_midiToFrequency(tRamp_tick(&adc[0]) * 127.0f) + (audioIn * tRamp_tick(&adc[4]) * 1000.0f);
-	tCycle_setFreq(&mySine[0], 440.0f);
-	sample = tCycle_tick(&mySine[0]);
+	//tCycle_setFreq(&mySine[0], 440.0f);
+	tTapeDelay_setDelay(&delay, tRamp_tick(&adc[0]) * 9000.0f);
+	//tTapeDelay_setRate(&delay, 100.0f);
+	//tDattorro_setSize(&delay, 2.0f);
+	//tDattorro_setInputFilter(&delay, 10000.0f);
+	//tDattorro_setFeedbackFilter(&delay, 8000.0f);
+	sample = tTapeDelay_tick(&delay, audioIn);
+	//sample = tCycle_tick(&mySine[0]);
 	//sample = audioIn;
 	return sample * .9f;
 }
