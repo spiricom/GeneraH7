@@ -40,11 +40,11 @@ t808Hihat myHihat;
 //tExpSmooth mySmooth;
 //tLivingString myLString;
 
+tCycle osc;
+
 tBuffer buff;
 tSampler samp;
 tEnvelope env;
-
-
 
 
 /**********************************************/
@@ -79,8 +79,6 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 
 	// note that the knobs come in with the data backwards (fully clockwise is near zero, counter-clockwise is near 65535)
 	// the CVs come in as expected (0V = 0, 10V = 65535)
-
-
 	for (int i = 0; i < 12; i++)
 	{
 		tRamp_init(&adc[i],7.0f, 1); //set all ramps for knobs/jacks to be 7ms ramp time and let the init function know they will be ticked every sample
@@ -100,6 +98,20 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 	}
 
 
+	tCycle_init(&osc);
+	tCycle_setFreq(&osc, 220.f);
+
+	// Init and set record
+	tBuffer_init (&buff, leaf.sampleRate * 0.5f); // init, 0.5 second buffer
+	tBuffer_setRecordMode (&buff, RecordOneShot); // RecordOneShot records once through
+
+	// Init and set play
+	tSampler_init (&samp, &buff); // init, give address of record buffer
+	tSampler_setMode (&samp, PlayLoop); //set in Loop Mode
+	tSampler_setRate(&samp, 1.f); // Rate of 1.0
+
+
+
 	//tExpSmooth_init(&mySmooth,0,0.0001);
 	//tLivingString_init(&myLString, 440.f, 0.2f, 0.f, 9000.f, 1.0f, 0.3f, 0.01f, 0.125f, 0);
 	//tSimpleLivingString_setLevMode(&myLString, mode1);
@@ -110,10 +122,20 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 	receive_status = HAL_SAI_Receive_DMA(hsaiIn, (uint8_t *)&audioInBuffer[0], AUDIO_BUFFER_SIZE);
 }
 
+int firstframe = 1;
+
 void audioFrame(uint16_t buffer_offset)
 {
 	int i;
 	int32_t current_sample = 0;
+
+	if (firstframe == 1)
+	{
+		tBuffer_record(&buff); // starts recording
+		tSampler_play(&samp); // start spitting samples out
+		firstframe = 0;
+	}
+
 
 	frameCounter++;
 	if (frameCounter >= 1)
@@ -121,6 +143,9 @@ void audioFrame(uint16_t buffer_offset)
 		frameCounter = 0;
 		buttonCheck();
 	}
+
+
+
 
 	for (i = 0; i < (HALF_BUFFER_SIZE); i++)
 	{
@@ -167,9 +192,6 @@ float audioTickL(float audioIn)
 
 	float drumGain = LEAF_clip(0.0f, tickedRamps[0] + tickedRamps[8], 2.0f);
 	//if digital input on jack 5, then trigger drum/hihat
-
-
-
 
 	/*
 	if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12)) == 1)
@@ -255,6 +277,7 @@ float audioTickR(float audioIn)
    */
 
 
+	/*
 	float audioEnv = tEnvelopeFollower_tick(&env, audioIn);
 	//if ((audioEnv > 0.3f) && (inAttack != 1))
 	if ((mode1==1) && (inAttack != 1))
@@ -267,17 +290,22 @@ float audioTickR(float audioIn)
 	{
 		inAttack = 0;
 	}
+	*/
 
 
-   myRate = LEAF_clip(0.25f, (((tickedRamps[2] * 2.0f)) + ((tickedRamps[10] * 2.0f))), 2.0f);
-    //float startTime = LEAF_clip(0, ((tickedRamps[0] * 24000.0f) + (tickedRamps[8] * 24000.0f)), 24000);
-    //float endTime = LEAF_clip(0, ((tickedRamps[1] * 24000.0f) + (tickedRamps[9] * 24000.0f)), 24000);
+
+	float knob3 = ((int)(tickedRamps[2] * 128.0f)) * INV_TWO_TO_7;
+    myRate = LEAF_clip(0.25f, (((knob3 * 2.0f)) + ((tickedRamps[10] * 2.0f))), 2.0f);
+
+    float knob1 = ((int)(tickedRamps[0] * 128.0f)) * INV_TWO_TO_7;
+    float startTime = LEAF_clip(0, ((knob1 * 24000.0f) + (tickedRamps[8] * 24000.0f)), 24000);
+
+    float knob2 = ((int)(tickedRamps[1] * 128.0f)) * INV_TWO_TO_7;
+    float endTime = LEAF_clip(0, ((knob2 * 24000.0f) + (tickedRamps[9] * 24000.0f)), 24000);
 
     //float myRate = 1.0f;
-    startTime = 0.0f;
-    endTime = 23000.0f;
-
-
+    //startTime = 0.0f;
+    //endTime = 23000.0f;
 
     tSampler_setStart(&samp, startTime);
     tSampler_setEnd(&samp, endTime);
@@ -300,9 +328,11 @@ float audioTickR(float audioIn)
     	//endTime = startTime + 4;
     }
 
-	sample *= 1.3f;
-	LEAF_shaper(sample, 1.2f);
+	//sample *= 1.3f;
 
+	//LEAF_shaper(sample, 1.2f);
+
+    //sample = tCycle_tick(&osc);
 
 	return sample;
 }
@@ -359,11 +389,13 @@ void buttonCheck(void)
 		{
 
 		}
+
+		tBuffer_record(&buff);
+
 		buttonPressed[0] = 0;
 	}
 	if (buttonPressed[1] == 1)
 	{
-
 		if (mode1 == 0)
 		{
 			HAL_GPIO_WritePin(GPIOA, GPIO_PIN_10, GPIO_PIN_SET);
