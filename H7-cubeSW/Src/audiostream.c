@@ -36,6 +36,13 @@ uint16_t frameCounter = 0;
 //audio objects
 tRamp adc[12];
 t808Hihat myHihat;
+
+tExpSmooth mySmooth;
+tLivingString myLString;
+
+
+
+
 /**********************************************/
 
 typedef enum BOOL {
@@ -80,12 +87,19 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 	//now to send all the necessary messages to the codec
 	AudioCodec_init(hi2c);
 
+
 	HAL_Delay(100);
 
 	for (int i = 0; i < AUDIO_BUFFER_SIZE; i++)
 	{
 		audioOutBuffer[i] = 0;
 	}
+
+
+	tExpSmooth_init(&mySmooth,0,0.0001);
+	tLivingString_init(&myLString, 440.f, 0.2f, 0.f, 9000.f, 1.0f, 0.3f, 0.01f, 0.125f, 0);
+	//tSimpleLivingString_setLevMode(&myLString, mode1);
+	//float freq, float pickPos, float prepIndex, float dampFreq, float decay, float targetLev, float levSmoothFactor, float levStrength, int levMode)
 
 	// set up the I2S driver to send audio data to the codec (and retrieve input as well)
 	transmit_status = HAL_SAI_Transmit_DMA(hsaiOut, (uint8_t *)&audioOutBuffer[0], AUDIO_BUFFER_SIZE);
@@ -122,6 +136,8 @@ void audioFrame(uint16_t buffer_offset)
 uint8_t hatTriggered = 0;
 float rightIn = 0.0f;
 
+float tickedRamps[12];
+
 float audioTickL(float audioIn)
 {
 	//read the analog inputs and smooth them with ramps
@@ -138,10 +154,35 @@ float audioTickL(float audioIn)
 	tRamp_setDest(&adc[10], (adcVals[10] * INV_TWO_TO_16));
 	tRamp_setDest(&adc[11], (adcVals[11] * INV_TWO_TO_16));
 
-	float drumGain = LEAF_clip(0.0f, tRamp_tick(&adc[0]) + tRamp_tick(&adc[8]), 2.0f);
+
+	for (int i = 0; i < 12; i++)
+	{
+		tickedRamps[i] = tRamp_tick(&adc[i]);
+	}
+
+
+	float drumGain = LEAF_clip(0.0f, tickedRamps[0] + tickedRamps[8], 2.0f);
 	//if digital input on jack 5, then trigger drum/hihat
 
+
+
+
+	/*
 	if ((!HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_12)) == 1)
+	{
+		if (hatTriggered == 0)
+		{
+			t808Hihat_on(&myHihat, drumGain);
+			hatTriggered = 1;
+		}
+	}
+	else
+	{
+		hatTriggered = 0;
+	}
+*/
+
+	if (audioIn < -0.25f)
 	{
 		if (hatTriggered == 0)
 		{
@@ -158,26 +199,108 @@ float audioTickL(float audioIn)
 	//OK, now some audio stuff
 
 
-	float newFreq = LEAF_clip(0.0f, LEAF_midiToFrequency(tRamp_tick(&adc[4]) * 100.0f) + (tRamp_tick(&adc[9])* 500.0f * tRamp_tick(&adc[5])) + (rightIn * 1000.0f), 23000.0f);
+	float newFreq = LEAF_clip(0.0f, LEAF_midiToFrequency(tickedRamps[4] * 100.0f) + (tickedRamps[9] * 500.0f * tickedRamps[5]) + (rightIn * 1000.0f), 23000.0f);
 
-	t808Hihat_setOscBandpassFreq(&myHihat, LEAF_clip (500.0f, ((tRamp_tick(&adc[11]) * 9000.0f) + 500.0f), 18000.0f));
-	t808Hihat_setHighpassFreq(&myHihat, LEAF_midiToFrequency(tRamp_tick(&adc[2]) * 127.0f)); //knob 4 sets hipass freq
-	t808Hihat_setOscNoiseMix(&myHihat, tRamp_tick(&adc[1]));
-	t808Hihat_setDecay(&myHihat, (tRamp_tick(&adc[3]) * 1000.0f) + (tRamp_tick(&adc[10]) * 1000.0f));
+	t808Hihat_setOscBandpassFreq(&myHihat, LEAF_clip (500.0f, ((tickedRamps[11] * 9000.0f) + 500.0f), 18000.0f));
+	t808Hihat_setHighpassFreq(&myHihat, LEAF_midiToFrequency(tickedRamps[2] * 127.0f)); //knob 4 sets hipass freq
+	t808Hihat_setOscNoiseMix(&myHihat, tickedRamps[1]);
+	t808Hihat_setDecay(&myHihat, (tickedRamps[3] * 1000.0f) + (tickedRamps[10] * 1000.0f));
 	t808Hihat_setOscFreq(&myHihat, newFreq);
-	t808Hihat_setStickBandPassFreq(&myHihat, (tRamp_tick(&adc[6]) * 1000.0f) + 2500.0f);
-	t808Hihat_setStickBandPassQ(&myHihat, (tRamp_tick(&adc[7]) * 2.0f) + 0.2f);
+	t808Hihat_setStickBandPassFreq(&myHihat, (tickedRamps[6] * 1000.0f) + 2500.0f);
+	t808Hihat_setStickBandPassQ(&myHihat, (tickedRamps[7] * 2.0f) + 0.2f);
 
-	sample = t808Hihat_tick(&myHihat);
-	LEAF_shaper(sample, 1.2f);
+	sample = t808Hihat_tick(&myHihat) * 2.0f;
+
+
+	LEAF_shaper(sample, 1.7f);
 	return sample;
 }
+
+uint8_t inAttack = 0;
+uint32_t sampleLength = 0;
+float myRate = 1.0f;
+float startTime = 0.0f;
+float endTime = 23000.0f;
+float smooth = 0.0f;
 
 float audioTickR(float audioIn)
 {
 	rightIn = audioIn;
-	sample *= 2.0f;
-	LEAF_shaper(sample, 1.6f);
+
+	sample = 0.0f;
+
+
+
+	smooth = 1.0f - LEAF_clip(0.1f, ((tickedRamps[1]) + (tickedRamps[9])), 1.0f);
+
+    tExpSmooth_setFactor(&mySmooth,smooth *0.02);  // knob 2 controls smooth factor
+    tExpSmooth_setDest(&mySmooth, LEAF_midiToFrequency((tickedRamps[0] * 72.0f) + (tickedRamps[8] * 120.0f))); // update frequency directly from knob 1
+
+
+
+    float freq = tExpSmooth_tick(&mySmooth);
+    tLivingString_setFreq(&myLString, freq);
+    tLivingString_setPickPos(&myLString, LEAF_clip(0.05f, tickedRamps[2] + tickedRamps[10], .95f));
+    tLivingString_setPrepIndex(&myLString, tickedRamps[3]);
+    tLivingString_setDampFreq(&myLString, 20000.0f*(LEAF_clip(0.1f, (tickedRamps[4] + tickedRamps[11]), .99f)));
+    tLivingString_setDecay(&myLString, 1.0f-(0.02f*tickedRamps[5]));
+    tLivingString_setLevStrength(&myLString,tickedRamps[6]);
+
+
+    sample=tLivingString_tick(&myLString, audioIn);
+
+
+	/*
+	float audioEnv = tEnvelopeFollower_tick(&env, audioIn);
+	//if ((audioEnv > 0.3f) && (inAttack != 1))
+	if ((mode1==1) && (inAttack != 1))
+	{
+		tBuffer_record(&buff);
+		inAttack = 1;
+	}
+	else if (mode1==0)
+	//else if ((audioEnv < 0.2f) && (inAttack == 1))
+	{
+		inAttack = 0;
+	}
+
+
+   myRate = LEAF_clip(0.25f, (((tickedRamps[2] * 2.0f)) + ((tickedRamps[10] * 2.0f))), 2.0f);
+    //float startTime = LEAF_clip(0, ((tickedRamps[0] * 24000.0f) + (tickedRamps[8] * 24000.0f)), 24000);
+    //float endTime = LEAF_clip(0, ((tickedRamps[1] * 24000.0f) + (tickedRamps[9] * 24000.0f)), 24000);
+
+    //float myRate = 1.0f;
+    startTime = 0.0f;
+    endTime = 23000.0f;
+
+
+
+    tSampler_setStart(&samp, startTime);
+    tSampler_setEnd(&samp, endTime);
+    tSampler_setRate(&samp, myRate);
+
+    tBuffer_tick(&buff, audioIn); // ticking the buffer records in to buffer
+
+    // dont tick sampler if buffer is active (not recording)
+    if (buff.active == 0)
+    {
+        sample = tSampler_tick(&samp); // ticking sampler loops sample
+    }
+
+    //if (startTime > 23000)
+    {
+    	//startTime = 23000;
+    }
+    //if (endTime <= startTime + 4)
+    {
+    	//endTime = startTime + 4;
+    }
+
+*/
+	sample *= 1.3f;
+	LEAF_shaper(sample, 1.2f);
+
+
 	return sample;
 }
 
