@@ -37,8 +37,12 @@ uint16_t frameCounter = 0;
 tRamp adc[12];
 t808Hihat myHihat;
 
-tExpSmooth mySmooth;
-tLivingString myLString;
+//tExpSmooth mySmooth;
+//tLivingString myLString;
+
+tBuffer buff;
+tSampler samp;
+tEnvelope env;
 
 
 
@@ -96,8 +100,8 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 	}
 
 
-	tExpSmooth_init(&mySmooth,0,0.0001);
-	tLivingString_init(&myLString, 440.f, 0.2f, 0.f, 9000.f, 1.0f, 0.3f, 0.01f, 0.125f, 0);
+	//tExpSmooth_init(&mySmooth,0,0.0001);
+	//tLivingString_init(&myLString, 440.f, 0.2f, 0.f, 9000.f, 1.0f, 0.3f, 0.01f, 0.125f, 0);
 	//tSimpleLivingString_setLevMode(&myLString, mode1);
 	//float freq, float pickPos, float prepIndex, float dampFreq, float decay, float targetLev, float levSmoothFactor, float levStrength, int levMode)
 
@@ -230,7 +234,7 @@ float audioTickR(float audioIn)
 	sample = 0.0f;
 
 
-
+/*
 	smooth = 1.0f - LEAF_clip(0.1f, ((tickedRamps[1]) + (tickedRamps[9])), 1.0f);
 
     tExpSmooth_setFactor(&mySmooth,smooth *0.02);  // knob 2 controls smooth factor
@@ -248,9 +252,9 @@ float audioTickR(float audioIn)
 
 
     sample=tLivingString_tick(&myLString, audioIn);
+   */
 
 
-	/*
 	float audioEnv = tEnvelopeFollower_tick(&env, audioIn);
 	//if ((audioEnv > 0.3f) && (inAttack != 1))
 	if ((mode1==1) && (inAttack != 1))
@@ -296,7 +300,6 @@ float audioTickR(float audioIn)
     	//endTime = startTime + 4;
     }
 
-*/
 	sample *= 1.3f;
 	LEAF_shaper(sample, 1.2f);
 

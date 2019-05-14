@@ -38,9 +38,9 @@
 									<listOptionValue builtIn="false" value="../Drivers/STM32H7xx_HAL_Driver/Inc/Legacy"/>
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Device/ST/STM32H7xx/Include"/>
 									<listOptionValue builtIn="false" value="../Drivers/CMSIS/Include"/>
-									<listOptionValue builtIn="false" value="/Users/airship/leaf/LEAF"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cube/leaf/LEAF}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cubeSW/leaf/LEAF}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cubeSW/LEAF/LEAF}&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1028914435" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__weak=&quot;__attribute__((weak))&quot;"/>
@@ -78,7 +78,7 @@
 							<tool id="fr.ac6.managedbuild.tool.gnu.archiver.1308168283" name="MCU GCC Archiver" superClass="fr.ac6.managedbuild.tool.gnu.archiver"/>
 							<tool id="fr.ac6.managedbuild.tool.gnu.cross.assembler.667156284" name="MCU GCC Assembler" superClass="fr.ac6.managedbuild.tool.gnu.cross.assembler">
 								<option id="gnu.both.asm.option.include.paths.1470292877" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cubeSW/leaf/LEAF}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cubeSW/LEAF/LEAF}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.653240242" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.assembler.input.871249066" superClass="fr.ac6.managedbuild.tool.gnu.cross.assembler.input"/>
@@ -111,6 +111,7 @@
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Inc"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="LEAF"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="USB_HOST"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="leaf/LEAF/Inc"/>
@@ -161,6 +162,7 @@
 									<listOptionValue builtIn="false" value="/Users/airship/leaf/LEAF"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cube/leaf/LEAF}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cubeSW/leaf/LEAF}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cubeSW/LEAF/LEAF}&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1028914435" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="__weak=&quot;__attribute__((weak))&quot;"/>
@@ -193,16 +195,10 @@
 									<listOptionValue builtIn="false" value="/Users/airship/leaf/LEAF"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cube/leaf/LEAF}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cubeSW/leaf/LEAF}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cubeSW/LEAF/LEAF}&quot;"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.653240242" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.assembler.input.871249066" superClass="fr.ac6.managedbuild.tool.gnu.cross.assembler.input"/>
-							</tool>
-							<tool id="fr.ac6.managedbuild.tool.gnu.cross.assembler.exe.release.331960187" name="MCU GCC Assembler" superClass="fr.ac6.managedbuild.tool.gnu.cross.assembler.exe.release">
-								<option id="gnu.both.asm.option.include.paths.1919808428" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/H7-cubeSW/leaf/LEAF}&quot;"/>
-								</option>
-								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1001491201" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
-								<inputType id="fr.ac6.managedbuild.tool.gnu.cross.assembler.input.528225054" superClass="fr.ac6.managedbuild.tool.gnu.cross.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
