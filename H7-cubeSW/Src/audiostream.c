@@ -40,9 +40,18 @@ t808Hihat myHihat;
 tExpSmooth mySmooth;
 tLivingString myLString;
 
+tSawtooth saw;
+tFIR fir;
+tNoise noise;
 
+float cs[32];
 
-
+const float firCoeffs32[29] = {
+  -0.0018225230f, -0.0015879294f, +0.0000000000f, +0.0036977508f, +0.0080754303f, +0.0085302217f, -0.0000000000f, -0.0173976984f,
+  -0.0341458607f, -0.0333591565f, +0.0000000000f, +0.0676308395f, +0.1522061835f, +0.2229246956f, +0.2504960933f, +0.2229246956f,
+  +0.1522061835f, +0.0676308395f, +0.0000000000f, -0.0333591565f, -0.0341458607f, -0.0173976984f, -0.0000000000f, +0.0085302217f,
+  +0.0080754303f, +0.0036977508f, +0.0000000000f, -0.0015879294f, -0.0018225230f
+};
 /**********************************************/
 
 typedef enum BOOL {
@@ -86,7 +95,15 @@ void audioInit(I2C_HandleTypeDef* hi2c, SAI_HandleTypeDef* hsaiOut, SAI_HandleTy
 	t808Hihat_init (&myHihat);
 	//now to send all the necessary messages to the codec
 	AudioCodec_init(hi2c);
+	tSawtooth_init(&saw);
+	float cutoff = 10.0f;
+	for (int i = 0; i < 32; ++i){
+		cs[i] = sinf(cutoff * leaf.invSampleRate * i)/(cutoff * leaf.invSampleRate  * i);
+	}
+	cs[0] = 1.0f;
+	tNoise_init(&noise, WhiteNoise);
 
+	tFIR_init(&fir, firCoeffs32);
 
 	HAL_Delay(100);
 
@@ -230,12 +247,11 @@ float audioTickR(float audioIn)
 	sample = 0.0f;
 
 
-
+/*
 	smooth = 1.0f - LEAF_clip(0.1f, ((tickedRamps[1]) + (tickedRamps[9])), 1.0f);
 
     tExpSmooth_setFactor(&mySmooth,smooth *0.02);  // knob 2 controls smooth factor
     tExpSmooth_setDest(&mySmooth, LEAF_midiToFrequency((tickedRamps[0] * 72.0f) + (tickedRamps[8] * 120.0f))); // update frequency directly from knob 1
-
 
 
     float freq = tExpSmooth_tick(&mySmooth);
@@ -297,9 +313,16 @@ float audioTickR(float audioIn)
     }
 
 */
+	/*
 	sample *= 1.3f;
 	LEAF_shaper(sample, 1.2f);
+*/
+	//tSawtooth_setFreq(&saw, 300.0f);
+	//sample = tSawtooth_tick(&saw);
 
+	sample = tNoise_tick(&noise);
+	sample *= 0.8f;
+	sample = tFIR_tick(&fir,sample);
 
 	return sample;
 }
